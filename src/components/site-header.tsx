@@ -1,9 +1,11 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import kairosLogo from "@/assets/kairos-logo.png.asset.json";
 
 const Icon = ({ name, className = "" }: { name: string; className?: string }) => (
   <span className={`material-symbols-outlined ${className}`}>{name}</span>
 );
+
 
 export type NavItem = { id: string; label: string; type: "anchor" | "route"; to?: string };
 
