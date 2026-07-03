@@ -9,13 +9,17 @@ const ORGS: { name: string; domain: string }[] = [
   { name: "Johns Hopkins Medicine", domain: "hopkinsmedicine.org" },
   { name: "Memorial Sloan Kettering", domain: "mskcc.org" },
   { name: "Kaiser Permanente", domain: "kp.org" },
-  { name: "NHS", domain: "nhs.uk" },
   { name: "Mount Sinai", domain: "mountsinai.org" },
   { name: "Stanford Health Care", domain: "stanfordhealthcare.org" },
   { name: "Massachusetts General", domain: "massgeneral.org" },
   { name: "NewYork-Presbyterian", domain: "nyp.org" },
   { name: "UCLA Health", domain: "uclahealth.org" },
   { name: "Cedars-Sinai", domain: "cedars-sinai.org" },
+  { name: "Pfizer", domain: "pfizer.com" },
+  { name: "Johnson & Johnson", domain: "jnj.com" },
+  { name: "GE HealthCare", domain: "gehealthcare.com" },
+  { name: "Medtronic", domain: "medtronic.com" },
+  { name: "Abbott", domain: "abbott.com" },
 ];
 
 export function LogoCarousel({ variant = "dark" }: { variant?: "dark" | "light" }) {
@@ -26,7 +30,7 @@ export function LogoCarousel({ variant = "dark" }: { variant?: "dark" | "light" 
 
   const logoUrl = (domain: string) =>
     LOGO_KEY
-      ? `https://img.logo.dev/${domain}?token=${LOGO_KEY}&size=140&format=png&fallback=monogram`
+      ? `https://img.logo.dev/${domain}?token=${LOGO_KEY}&size=200&format=png&fallback=monogram`
       : "";
 
   const isDark = variant === "dark";
@@ -35,41 +39,39 @@ export function LogoCarousel({ variant = "dark" }: { variant?: "dark" | "light" 
     <div
       className="relative overflow-hidden"
       style={{
-        maskImage: "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
-        WebkitMaskImage: "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
+        maskImage: "linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent)",
+        WebkitMaskImage: "linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent)",
       }}
     >
       <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex gap-10 py-2">
-          {[...ORGS, ...ORGS].map((org, i) => (
-            <div
-              key={`${org.domain}-${i}`}
-              className={`shrink-0 flex items-center gap-3 px-5 py-3 rounded-xl border ${
-                isDark
-                  ? "border-white/10 bg-white/5 backdrop-blur-sm"
-                  : "border-outline-variant bg-white/70"
-              }`}
-              title={org.name}
-            >
-              {LOGO_KEY ? (
+        <div className="flex items-center gap-x-14 sm:gap-x-16 py-3">
+          {LOGO_KEY
+            ? [...ORGS, ...ORGS].map((org, i) => (
                 <img
+                  key={`${org.domain}-${i}`}
                   src={logoUrl(org.domain)}
                   alt={`${org.name} logo`}
-                  width={28}
-                  height={28}
+                  title={org.name}
+                  width={120}
+                  height={40}
                   loading="lazy"
-                  className={`h-7 w-7 object-contain rounded ${isDark ? "brightness-0 invert opacity-90" : ""}`}
+                  className={`shrink-0 h-8 sm:h-9 w-auto object-contain transition-all duration-300 ${
+                    isDark
+                      ? "brightness-0 invert opacity-60 hover:opacity-100"
+                      : "grayscale opacity-70 hover:grayscale-0 hover:opacity-100"
+                  }`}
                 />
-              ) : null}
-              <span
-                className={`text-xs font-semibold whitespace-nowrap ${
-                  isDark ? "text-white/80" : "text-on-surface-variant"
-                }`}
-              >
-                {org.name}
-              </span>
-            </div>
-          ))}
+              ))
+            : [...ORGS, ...ORGS].map((org, i) => (
+                <span
+                  key={`${org.domain}-${i}`}
+                  className={`shrink-0 whitespace-nowrap font-display font-semibold text-sm ${
+                    isDark ? "text-white/60" : "text-on-surface-variant"
+                  }`}
+                >
+                  {org.name}
+                </span>
+              ))}
         </div>
       </div>
     </div>
