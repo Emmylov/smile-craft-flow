@@ -26,12 +26,12 @@ export function InteractiveGlobe({ size = 520 }: { size?: number }) {
   useEffect(() => {
     if (!canvasRef.current) return;
     let phi = 0;
-    let width = 0;
+    let width = canvasRef.current.offsetWidth;
+    let rafId = 0;
     const onResize = () => {
       if (canvasRef.current) width = canvasRef.current.offsetWidth;
     };
     window.addEventListener("resize", onResize);
-    onResize();
 
     const globe = createGlobe(canvasRef.current, {
       devicePixelRatio: 2,
@@ -47,19 +47,25 @@ export function InteractiveGlobe({ size = 520 }: { size?: number }) {
       markerColor: [0.32, 0.28, 0.9],
       glowColor: [0.85, 0.82, 1],
       markers: MARKERS,
-      onRender: (state) => {
-        if (pointerInteracting.current === null) phi += 0.004;
-        state.phi = phi + rotationRef.current;
-        state.width = width * 2;
-        state.height = width * 2;
-      },
     });
+
+    const tick = () => {
+      if (pointerInteracting.current === null) phi += 0.004;
+      globe.update({
+        phi: phi + rotationRef.current,
+        width: width * 2,
+        height: width * 2,
+      });
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
 
     setTimeout(() => {
       if (canvasRef.current) canvasRef.current.style.opacity = "1";
     }, 0);
 
     return () => {
+      cancelAnimationFrame(rafId);
       globe.destroy();
       window.removeEventListener("resize", onResize);
     };
