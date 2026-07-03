@@ -156,15 +156,15 @@ export function SiteHeader({ onRequest }: { onRequest?: () => void }) {
 
 
       {open && (
-        <div className="lg:hidden border-t border-outline-variant bg-background/95 backdrop-blur-xl">
-          <nav className="max-w-container-max mx-auto px-margin-desktop py-3 flex flex-col gap-1">
+        <div className="lg:hidden pointer-events-auto mx-3 mt-2 rounded-2xl border border-outline-variant bg-background/95 backdrop-blur-xl shadow-xl">
+          <nav className="p-3 flex flex-col gap-1">
             {DEFAULT_NAV.map((n) =>
               n.type === "route" ? (
                 <Link
                   key={n.id}
                   to={n.to!}
                   onClick={() => setOpen(false)}
-                  className="px-3 py-2 rounded-md text-sm font-medium text-on-surface-variant hover:bg-surface-container"
+                  className="px-3 py-2.5 rounded-lg text-sm font-semibold text-on-surface-variant hover:bg-surface-container"
                 >
                   {n.label}
                 </Link>
@@ -173,18 +173,25 @@ export function SiteHeader({ onRequest }: { onRequest?: () => void }) {
                   key={n.id}
                   href={`/#${n.id}`}
                   onClick={handleAnchor(n.id)}
-                  className="px-3 py-2 rounded-md text-sm font-medium text-on-surface-variant hover:bg-surface-container"
+                  className="px-3 py-2.5 rounded-lg text-sm font-semibold text-on-surface-variant hover:bg-surface-container"
                 >
                   {n.label}
                 </a>
               ),
             )}
+            <button
+              onClick={requestAccess}
+              className="mt-1 bg-primary text-on-primary px-4 py-2.5 rounded-lg text-sm font-bold shadow-md shadow-primary/20"
+            >
+              Request Access
+            </button>
           </nav>
         </div>
       )}
     </header>
   );
 }
+
 
 export function SiteFooter() {
   return (
