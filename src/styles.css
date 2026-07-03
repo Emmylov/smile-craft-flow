@@ -110,6 +110,22 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+  /* Kairos brand tokens */
+  --primary: oklch(0.52 0.18 265);
+  --primary-foreground: oklch(0.99 0 0);
+  --primary-container: oklch(0.72 0.14 265);
+  --on-primary: oklch(0.99 0 0);
+  --on-background: oklch(0.16 0.03 265);
+  --on-surface-variant: oklch(0.48 0.02 265);
+  --surface-container: oklch(0.96 0.005 265);
+  --surface-container-low: oklch(0.975 0.005 265);
+  --surface-container-highest: oklch(0.93 0.008 265);
+  --outline-variant: oklch(0.9 0.01 265);
+  --error: oklch(0.62 0.22 25);
+  --teal: oklch(0.78 0.13 190);
+  --violet: oklch(0.62 0.22 295);
+  --electric-blue: oklch(0.72 0.18 235);
+  --deep-indigo: oklch(0.17 0.05 275);
 }
 
 .dark {
