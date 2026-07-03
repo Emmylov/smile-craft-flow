@@ -99,14 +99,18 @@ function Index() {
             </div>
           </div>
         </div>
-        {/* Logo carousel */}
-        <div className="relative z-10 max-w-container-max mx-auto px-margin-desktop mt-20">
-          <p className="text-[11px] font-bold text-white/40 uppercase tracking-[0.25em] text-center mb-6">
+      </section>
+
+      {/* Trusted-by logo strip */}
+      <section className="bg-background border-b border-outline-variant/60 py-10">
+        <div className="max-w-container-max mx-auto px-margin-desktop">
+          <p className="text-[11px] font-bold text-on-surface-variant/70 uppercase tracking-[0.25em] text-center mb-7">
             Trusted by leading healthcare organizations
           </p>
-          <LogoCarousel variant="dark" />
+          <LogoCarousel variant="light" />
         </div>
       </section>
+
 
 
       {/* Problem */}
