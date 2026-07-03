@@ -82,14 +82,14 @@ function Index() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
             {[
-              { icon: "hub", color: "error", title: "Disconnected Systems", body: "Critical data scattered across multiple siloed platforms that don't talk to each other." },
-              { icon: "psychology", color: "primary", title: "Administrative Overload", body: "Doctors spend 50% more time on admin than with patients. Kairos automates the noise." },
-              { icon: "sentiment_very_dissatisfied", color: "violet", title: "Poor Patient Experience", body: "Long waits, repeated forms, and unclear communication leading to patient frustration." },
-              { icon: "trending_down", color: "teal", title: "Burnout & Shortage", body: "Clinician burnout is at an all-time high. We build tools that actually support providers." },
+              { icon: "hub", iconWrap: "bg-error/10", iconColor: "text-error", title: "Disconnected Systems", body: "Critical data scattered across multiple siloed platforms that don't talk to each other." },
+              { icon: "psychology", iconWrap: "bg-primary/10", iconColor: "text-primary", title: "Administrative Overload", body: "Doctors spend 50% more time on admin than with patients. Kairos automates the noise." },
+              { icon: "sentiment_very_dissatisfied", iconWrap: "bg-violet/10", iconColor: "text-violet", title: "Poor Patient Experience", body: "Long waits, repeated forms, and unclear communication leading to patient frustration." },
+              { icon: "trending_down", iconWrap: "bg-teal/10", iconColor: "text-teal", title: "Burnout & Shortage", body: "Clinician burnout is at an all-time high. We build tools that actually support providers." },
             ].map((c) => (
               <div key={c.title} className="bg-white p-8 rounded-2xl border border-outline-variant hover:shadow-xl transition-shadow group">
-                <div className={`w-12 h-12 rounded-xl bg-${c.color}/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                  <Icon name={c.icon} className={`text-${c.color}`} />
+                <div className={`w-12 h-12 rounded-xl ${c.iconWrap} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                  <Icon name={c.icon} className={c.iconColor} />
                 </div>
                 <h3 className="text-headline-md font-display mb-4">{c.title}</h3>
                 <p className="text-body-md text-on-surface-variant">{c.body}</p>
@@ -200,15 +200,15 @@ function Index() {
                 </div>
                 <div className="space-y-4">
                   {[
-                    { icon: "report", color: "error", label: "High Priority Alert", time: "2 min ago", text: "Sepsis risk detected: Room 12B. BP dropping, elevated HR." },
-                    { icon: "article", color: "violet", label: "Patient Summary", time: "1 min ago", text: "AI generated overview ready for review by Dr. Sarah." },
-                    { icon: "lightbulb", color: "teal", label: "Care Suggestion", time: "Just now", text: "Labs recommended based on respiratory symptoms." },
+                    { icon: "report", wrap: "bg-error/10 border-error/20", tone: "text-error", label: "High Priority Alert", time: "2 min ago", text: "Sepsis risk detected: Room 12B. BP dropping, elevated HR." },
+                    { icon: "article", wrap: "bg-violet/10 border-violet/20", tone: "text-violet", label: "Patient Summary", time: "1 min ago", text: "AI generated overview ready for review by Dr. Sarah." },
+                    { icon: "lightbulb", wrap: "bg-teal/10 border-teal/20", tone: "text-teal", label: "Care Suggestion", time: "Just now", text: "Labs recommended based on respiratory symptoms." },
                   ].map((a) => (
-                    <div key={a.label} className={`p-4 rounded-xl bg-${a.color}/10 border border-${a.color}/20 flex gap-4`}>
-                      <Icon name={a.icon} className={`text-${a.color}`} />
+                    <div key={a.label} className={`p-4 rounded-xl border ${a.wrap} flex gap-4`}>
+                      <Icon name={a.icon} className={a.tone} />
                       <div>
                         <div className="flex justify-between items-center mb-1 gap-4">
-                          <span className={`text-[12px] font-bold text-${a.color}`}>{a.label}</span>
+                          <span className={`text-[12px] font-bold ${a.tone}`}>{a.label}</span>
                           <span className="text-[10px] opacity-40">{a.time}</span>
                         </div>
                         <p className="text-sm">{a.text}</p>
