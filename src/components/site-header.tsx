@@ -75,66 +75,85 @@ export function SiteHeader({ onRequest }: { onRequest?: () => void }) {
   };
 
   return (
-    <header
-      className={`sticky top-0 z-50 transition-all ${
-        scrolled ? "backdrop-blur-xl bg-background/85 border-b border-outline-variant shadow-sm" : "bg-transparent"
-      }`}
-    >
-      <div className="max-w-container-max mx-auto px-margin-desktop h-14 flex items-center justify-between gap-3">
-        <Link to="/" className="flex items-center gap-2 shrink-0 group">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-violet flex items-center justify-center shadow-md shadow-primary/30 group-hover:scale-110 transition-transform">
-            <Icon name="favorite" className="text-white text-[16px]" />
+    <header className="sticky top-0 z-50 pointer-events-none">
+      <div
+        className={`pointer-events-auto mx-auto mt-3 max-w-container-max px-3 transition-all duration-300 ${
+          scrolled ? "px-3" : "px-margin-desktop"
+        }`}
+      >
+        <div
+          className={`flex items-center justify-between gap-3 rounded-2xl transition-all duration-300 ${
+            scrolled
+              ? "h-14 px-3 sm:px-4 bg-background/80 backdrop-blur-xl border border-outline-variant shadow-lg shadow-primary/5"
+              : "h-16 px-3 sm:px-5 bg-transparent border border-transparent"
+          }`}
+        >
+          <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+            <img
+              src={kairosLogo.url}
+              alt="Kairos logo"
+              width={36}
+              height={36}
+              className="h-9 w-9 object-contain transition-transform duration-300 group-hover:rotate-[18deg] group-hover:scale-110"
+            />
+            <span
+              className={`font-display font-extrabold text-lg tracking-tight ${
+                scrolled ? "text-on-background" : "text-on-background"
+              }`}
+            >
+              Kairos
+            </span>
+          </Link>
+
+          <nav className="hidden lg:flex items-center gap-1 rounded-full bg-surface-container/60 backdrop-blur-sm px-1.5 py-1 border border-outline-variant/50">
+            {DEFAULT_NAV.map((n) =>
+              n.type === "route" ? (
+                <Link
+                  key={n.id}
+                  to={n.to!}
+                  className={`px-3.5 py-1.5 rounded-full text-[13px] font-semibold whitespace-nowrap transition-all ${
+                    isActive(n)
+                      ? "text-on-primary bg-primary shadow-sm shadow-primary/30"
+                      : "text-on-surface-variant hover:text-on-background hover:bg-surface-container-highest"
+                  }`}
+                >
+                  {n.label}
+                </Link>
+              ) : (
+                <a
+                  key={n.id}
+                  href={`/#${n.id}`}
+                  onClick={handleAnchor(n.id)}
+                  className={`px-3.5 py-1.5 rounded-full text-[13px] font-semibold whitespace-nowrap transition-all ${
+                    isActive(n)
+                      ? "text-on-primary bg-primary shadow-sm shadow-primary/30"
+                      : "text-on-surface-variant hover:text-on-background hover:bg-surface-container-highest"
+                  }`}
+                >
+                  {n.label}
+                </a>
+              ),
+            )}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={requestAccess}
+              className="hidden sm:inline-flex bg-primary text-on-primary px-5 py-2.5 rounded-full text-[13px] font-bold hover:brightness-110 hover:scale-[1.03] transition-all shrink-0 shadow-lg shadow-primary/25"
+            >
+              Request Access
+            </button>
+            <button
+              onClick={() => setOpen(!open)}
+              className="lg:hidden p-2 rounded-full hover:bg-surface-container text-on-background"
+              aria-label="Menu"
+            >
+              <Icon name={open ? "close" : "menu"} className="text-[24px]" />
+            </button>
           </div>
-          <span className="font-display font-bold text-sm">Kairos</span>
-        </Link>
-
-        <nav className="hidden lg:flex items-center gap-0.5 min-w-0">
-          {DEFAULT_NAV.map((n) =>
-            n.type === "route" ? (
-              <Link
-                key={n.id}
-                to={n.to!}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
-                  isActive(n)
-                    ? "text-primary bg-primary/10"
-                    : "text-on-surface-variant hover:text-on-background hover:bg-surface-container"
-                }`}
-              >
-                {n.label}
-              </Link>
-            ) : (
-              <a
-                key={n.id}
-                href={`/#${n.id}`}
-                onClick={handleAnchor(n.id)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
-                  isActive(n)
-                    ? "text-primary bg-primary/10"
-                    : "text-on-surface-variant hover:text-on-background hover:bg-surface-container"
-                }`}
-              >
-                {n.label}
-              </a>
-            ),
-          )}
-        </nav>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={requestAccess}
-            className="bg-primary text-on-primary px-4 py-2 rounded-md text-xs font-semibold hover:bg-primary/90 transition-colors shrink-0 shadow-md shadow-primary/20"
-          >
-            Request Access
-          </button>
-          <button
-            onClick={() => setOpen(!open)}
-            className="lg:hidden p-2 rounded-md hover:bg-surface-container"
-            aria-label="Menu"
-          >
-            <Icon name={open ? "close" : "menu"} className="text-[22px]" />
-          </button>
         </div>
       </div>
+
 
       {open && (
         <div className="lg:hidden border-t border-outline-variant bg-background/95 backdrop-blur-xl">
