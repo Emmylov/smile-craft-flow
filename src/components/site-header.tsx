@@ -198,12 +198,11 @@ export function SiteFooter() {
     <footer className="bg-deep-indigo text-white/70 py-12">
       <div className="max-w-container-max mx-auto px-margin-desktop grid md:grid-cols-4 gap-8 text-sm">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-violet flex items-center justify-center">
-              <Icon name="favorite" className="text-white text-[16px]" />
-            </div>
-            <span className="font-display font-bold text-white">Kairos</span>
+          <div className="flex items-center gap-2.5 mb-3">
+            <img src={kairosLogo.url} alt="Kairos logo" width={32} height={32} className="h-8 w-8 object-contain" />
+            <span className="font-display font-extrabold text-lg text-white tracking-tight">Kairos</span>
           </div>
+
           <p className="text-xs text-white/50 max-w-xs">Digital infrastructure for human-centered healthcare.</p>
         </div>
         <div>
