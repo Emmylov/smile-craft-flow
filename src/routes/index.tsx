@@ -29,39 +29,57 @@ function Index() {
     <div className="bg-background text-on-background font-body-md overflow-x-hidden">
       <SiteHeader onRequest={scrollToForm} />
       {/* Hero */}
-      <section id="hero" className="relative pt-stack-lg pb-stack-lg overflow-hidden hero-dark-gradient text-white scroll-mt-16 -mt-14 pt-24">
-        <div className="absolute inset-0 opacity-[0.07] bg-[radial-gradient(circle_at_center,#fff_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none"></div>
+      <section id="hero" className="relative pb-stack-lg overflow-hidden hero-dark-gradient text-white scroll-mt-16 -mt-20 pt-36">
+        {/* backdrop layers */}
+        <div className="absolute inset-0 opacity-[0.06] bg-[radial-gradient(circle_at_center,#fff_1px,transparent_1px)] bg-[size:34px_34px] pointer-events-none"></div>
+        <div className="absolute -top-32 -left-24 w-[36rem] h-[36rem] rounded-full bg-primary/30 blur-[120px] pointer-events-none"></div>
+        <div className="absolute top-20 -right-24 w-[32rem] h-[32rem] rounded-full bg-violet/30 blur-[120px] pointer-events-none"></div>
+        <div className="absolute bottom-0 left-1/3 w-[28rem] h-[28rem] rounded-full bg-teal/20 blur-[120px] pointer-events-none"></div>
+
         <div className="max-w-container-max mx-auto px-margin-desktop grid lg:grid-cols-2 gap-stack-lg items-center relative z-10">
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-container/20 border border-primary-container/30">
+          <div className="space-y-7">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/15 backdrop-blur-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse"></span>
               <span className="text-[12px] font-bold tracking-wider text-teal uppercase">Built for Care. Designed for People.</span>
             </div>
-            <h1 className="font-display-xl text-display-xl leading-tight">
-              Digital infrastructure for <br />
+            <h1 className="font-display-xl text-display-xl leading-[1.05]">
+              Digital infrastructure for <br className="hidden sm:block" />
               <span className="gradient-text">human-centered</span> healthcare.
             </h1>
             <p className="text-body-lg text-white/70 max-w-xl">
               Kairos connects every part of healthcare—people, data, and systems—so professionals can focus on what matters most: caring for people.
             </p>
-            <div className="flex flex-wrap gap-4 pt-4">
-              <button onClick={scrollToForm} className="bg-primary text-on-primary px-8 py-4 rounded-lg text-label-md font-label-md flex items-center gap-2 hover:scale-[1.02] transition-transform shadow-xl shadow-primary/30">
+            <div className="flex flex-wrap gap-3 pt-2">
+              <button onClick={scrollToForm} className="bg-primary text-on-primary px-7 py-3.5 rounded-full text-label-md font-bold flex items-center gap-2 hover:scale-[1.03] hover:brightness-110 transition-all shadow-xl shadow-primary/40">
                 See Kairos in Action <Icon name="arrow_forward" className="text-[20px]" />
               </button>
-              <a href="/product" className="border border-white/20 text-white px-8 py-4 rounded-lg text-label-md font-label-md flex items-center gap-2 hover:bg-white/5 transition-all">
+              <a href="/product" className="border border-white/20 bg-white/5 backdrop-blur-sm text-white px-7 py-3.5 rounded-full text-label-md font-bold flex items-center gap-2 hover:bg-white/10 transition-all">
                 Explore the Platform <Icon name="play_circle" className="text-[20px]" />
               </a>
             </div>
+            <div className="flex flex-wrap items-center gap-6 pt-4">
+              {[
+                { value: "2.4M+", label: "Patients connected" },
+                { value: "180+", label: "Care facilities" },
+                { value: "99.98%", label: "Uptime" },
+              ].map((s) => (
+                <div key={s.label} className="flex flex-col">
+                  <span className="font-display font-extrabold text-xl text-white">{s.value}</span>
+                  <span className="text-[11px] text-white/50 uppercase tracking-wide">{s.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="relative">
-            <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl glow-effect">
+            <div className="absolute -inset-6 bg-gradient-to-tr from-primary/40 via-violet/30 to-teal/30 blur-3xl rounded-[2rem] pointer-events-none"></div>
+            <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl glow-effect ring-1 ring-white/10">
               <img
                 alt="Global Healthcare Connectivity"
                 className="w-full object-cover aspect-[16/10]"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpffpcDm5cT5BrpyHNXwaFDyN7VDBbsgXJsMnp_HImRr6XRubObZWyG4RXkTtGGYkt4o919Fh3DFy-Azing9t5zt1TilVzVXZMnaj5C64KavES6wkG1wEW4S_7YKjF4nfSoNscKCFn8pK9KAAt-WI7ISmgEfwnNfeYN3ICbIRuwavOaIXeyp3X15flETLgtZEm6tExDUy6wipgo0V9r6YC3QBuYZCF_E18W1ujZPgzyTSXXHauw6yFJzI7UkpulrYLzpUlkIrCrWw"
               />
             </div>
-            <div className="absolute -top-10 -right-6 z-20 dark-glass p-4 rounded-xl shadow-xl flex items-center gap-3 animate-bounce" style={{ animationDuration: "4s" }}>
+            <div className="absolute -top-8 -right-4 z-20 dark-glass p-4 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce ring-1 ring-white/10" style={{ animationDuration: "4s" }}>
               <div className="w-10 h-10 rounded-full bg-teal/20 flex items-center justify-center">
                 <Icon name="bolt" className="text-teal text-[20px]" />
               </div>
@@ -70,7 +88,7 @@ function Index() {
                 <p className="text-[12px] text-white/60">Treatment adherence optimal</p>
               </div>
             </div>
-            <div className="absolute -bottom-6 -left-6 z-20 dark-glass p-4 rounded-xl shadow-xl flex items-center gap-3">
+            <div className="absolute -bottom-6 -left-4 z-20 dark-glass p-4 rounded-2xl shadow-xl flex items-center gap-3 ring-1 ring-white/10">
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                 <Icon name="groups" className="text-primary-container text-[20px]" />
               </div>
@@ -82,13 +100,14 @@ function Index() {
           </div>
         </div>
         {/* Logo carousel */}
-        <div className="relative z-10 max-w-container-max mx-auto px-margin-desktop mt-16">
-          <p className="text-[11px] font-bold text-white/40 uppercase tracking-[0.25em] text-center mb-5">
+        <div className="relative z-10 max-w-container-max mx-auto px-margin-desktop mt-20">
+          <p className="text-[11px] font-bold text-white/40 uppercase tracking-[0.25em] text-center mb-6">
             Trusted by leading healthcare organizations
           </p>
           <LogoCarousel variant="dark" />
         </div>
       </section>
+
 
       {/* Problem */}
       <section id="problem" className="py-stack-lg bg-surface-container-low/50 scroll-mt-16">
