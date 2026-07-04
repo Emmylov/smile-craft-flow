@@ -157,7 +157,7 @@ function StaffPage() {
   );
 }
 
-function F({ label, value, onChange, type = "text", required }: any) {
+function F({ label, value, onChange, type = "text", required }: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean }) {
   return (
     <div>
       <label className="text-xs font-medium block mb-1">{label}{required && " *"}</label>

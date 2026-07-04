@@ -206,7 +206,7 @@ function TriageDialog({ entry, onClose, onSaved }: { entry: any; onClose: () => 
   );
 }
 
-function TF({ label, value, onChange, type = "text", placeholder }: any) {
+function TF({ label, value, onChange, type = "text", placeholder }: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string }) {
   return (
     <div>
       <label className="text-xs font-medium block mb-1">{label}</label>

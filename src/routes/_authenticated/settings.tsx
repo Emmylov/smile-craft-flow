@@ -68,7 +68,7 @@ function SettingsPage() {
   );
 }
 
-function F({ label, value, onChange }: any) {
+function F({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <label className="text-xs font-medium block mb-1">{label}</label>
