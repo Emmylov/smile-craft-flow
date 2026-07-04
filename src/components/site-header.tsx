@@ -137,12 +137,15 @@ export function SiteHeader({ onRequest }: { onRequest?: () => void }) {
           </nav>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={requestAccess}
+            <Link to="/login" className="hidden sm:inline-flex text-on-background/80 hover:text-on-background px-4 py-2 rounded-full text-[13px] font-semibold">
+              Sign in
+            </Link>
+            <Link
+              to="/onboarding"
               className="hidden sm:inline-flex bg-primary text-on-primary px-5 py-2.5 rounded-full text-[13px] font-bold hover:brightness-110 hover:scale-[1.03] transition-all shrink-0 shadow-lg shadow-primary/25"
             >
-              Request Access
-            </button>
+              Launch Kairos Core
+            </Link>
             <button
               onClick={() => setOpen(!open)}
               className="lg:hidden p-2 rounded-full hover:bg-surface-container text-on-background"
