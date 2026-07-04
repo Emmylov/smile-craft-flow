@@ -836,6 +836,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      verify_workspace: {
+        Args: { _workspace_id: string }
+        Returns: {
+          hospital_id: string
+          hospital_name: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "doctor" | "nurse" | "reception"
