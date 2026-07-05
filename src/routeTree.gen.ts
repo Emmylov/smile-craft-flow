@@ -18,6 +18,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedQueueRouteImport } from './routes/_authenticated/queue'
+import { Route as AuthenticatedPharmacyRouteImport } from './routes/_authenticated/pharmacy'
 import { Route as AuthenticatedPatientsRouteImport } from './routes/_authenticated/patients'
 import { Route as AuthenticatedDepartmentsRouteImport } from './routes/_authenticated/departments'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -70,6 +71,11 @@ const AuthenticatedQueueRoute = AuthenticatedQueueRouteImport.update({
   path: '/queue',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPharmacyRoute = AuthenticatedPharmacyRouteImport.update({
+  id: '/pharmacy',
+  path: '/pharmacy',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPatientsRoute = AuthenticatedPatientsRouteImport.update({
   id: '/patients',
   path: '/patients',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
   '/patients': typeof AuthenticatedPatientsRouteWithChildren
+  '/pharmacy': typeof AuthenticatedPharmacyRoute
   '/queue': typeof AuthenticatedQueueRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
   '/patients': typeof AuthenticatedPatientsRouteWithChildren
+  '/pharmacy': typeof AuthenticatedPharmacyRoute
   '/queue': typeof AuthenticatedQueueRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/departments': typeof AuthenticatedDepartmentsRoute
   '/_authenticated/patients': typeof AuthenticatedPatientsRouteWithChildren
+  '/_authenticated/pharmacy': typeof AuthenticatedPharmacyRoute
   '/_authenticated/queue': typeof AuthenticatedQueueRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/departments'
     | '/patients'
+    | '/pharmacy'
     | '/queue'
     | '/settings'
     | '/staff'
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/departments'
     | '/patients'
+    | '/pharmacy'
     | '/queue'
     | '/settings'
     | '/staff'
@@ -210,6 +221,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/departments'
     | '/_authenticated/patients'
+    | '/_authenticated/pharmacy'
     | '/_authenticated/queue'
     | '/_authenticated/settings'
     | '/_authenticated/staff'
@@ -291,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQueueRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pharmacy': {
+      id: '/_authenticated/pharmacy'
+      path: '/pharmacy'
+      fullPath: '/pharmacy'
+      preLoaderRoute: typeof AuthenticatedPharmacyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/patients': {
       id: '/_authenticated/patients'
       path: '/patients'
@@ -362,6 +381,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDepartmentsRoute: typeof AuthenticatedDepartmentsRoute
   AuthenticatedPatientsRoute: typeof AuthenticatedPatientsRouteWithChildren
+  AuthenticatedPharmacyRoute: typeof AuthenticatedPharmacyRoute
   AuthenticatedQueueRoute: typeof AuthenticatedQueueRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
@@ -374,6 +394,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDepartmentsRoute: AuthenticatedDepartmentsRoute,
   AuthenticatedPatientsRoute: AuthenticatedPatientsRouteWithChildren,
+  AuthenticatedPharmacyRoute: AuthenticatedPharmacyRoute,
   AuthenticatedQueueRoute: AuthenticatedQueueRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
