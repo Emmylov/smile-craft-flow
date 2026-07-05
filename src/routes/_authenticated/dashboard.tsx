@@ -18,6 +18,17 @@ function DashboardPage() {
     staff: 0,
     departments: 0,
   });
+  const [analytics, setAnalytics] = useState({
+    throughputToday: 0,
+    avgWaitRoutine: 0,
+    avgWaitUrgent: 0,
+    avgWaitCritical: 0,
+    rxPending: 0,
+    rxReady: 0,
+    labPending: 0,
+    labInProgress: 0,
+  });
+  const [clinicians, setClinicians] = useState<any[]>([]);
   const [recentQueue, setRecentQueue] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
 
@@ -28,7 +39,7 @@ function DashboardPage() {
       today.setHours(0, 0, 0, 0);
       const todayIso = today.toISOString();
 
-      const [p, qw, qi, apt, st, dp, rq, notif] = await Promise.all([
+      const [p, qw, qi, apt, st, dp, rq, notif, allTodayQueue, rxAll, labAll, cliniciansData] = await Promise.all([
         supabase.from("patients").select("id", { count: "exact", head: true }).eq("hospital_id", hospital.id),
         supabase.from("queue_entries").select("id", { count: "exact", head: true }).eq("hospital_id", hospital.id).in("status", ["waiting", "checked_in"]),
         supabase.from("queue_entries").select("id", { count: "exact", head: true }).eq("hospital_id", hospital.id).eq("status", "in_consultation"),
@@ -37,7 +48,38 @@ function DashboardPage() {
         supabase.from("departments").select("id", { count: "exact", head: true }).eq("hospital_id", hospital.id),
         supabase.from("queue_entries").select("id, status, urgency, checked_in_at, patients(full_name, patient_code)").eq("hospital_id", hospital.id).order("checked_in_at", { ascending: false }).limit(6),
         supabase.from("notifications").select("*").eq("hospital_id", hospital.id).order("created_at", { ascending: false }).limit(5),
+        supabase.from("queue_entries").select("urgency, status, checked_in_at, completed_at, assigned_doctor").eq("hospital_id", hospital.id).gte("checked_in_at", todayIso),
+        supabase.from("prescriptions").select("status").eq("hospital_id", hospital.id),
+        supabase.from("lab_orders").select("status").eq("hospital_id", hospital.id),
+        supabase.from("profiles").select("id, user_id, full_name").eq("hospital_id", hospital.id),
       ]);
+
+      // Analytics computed client-side
+      const finished = (allTodayQueue.data ?? []).filter((q: any) => q.status === "completed" && q.completed_at);
+      const waitOf = (q: any) => (new Date(q.completed_at!).getTime() - new Date(q.checked_in_at).getTime()) / 60000;
+      const avgFor = (u: string) => {
+        const arr = finished.filter((q: any) => q.urgency === u).map(waitOf);
+        return arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
+      };
+
+      const rxCounts = (rxAll.data ?? []).reduce((acc: any, r: any) => ((acc[r.status] = (acc[r.status] || 0) + 1), acc), {});
+      const labCounts = (labAll.data ?? []).reduce((acc: any, r: any) => ((acc[r.status] = (acc[r.status] || 0) + 1), acc), {});
+
+      // Clinician activity (consultations today)
+      const { data: consultsToday } = await supabase
+        .from("consultations")
+        .select("doctor_id")
+        .eq("hospital_id", hospital.id)
+        .gte("created_at", todayIso);
+      const byDoctor: Record<string, number> = {};
+      (consultsToday ?? []).forEach((c: any) => {
+        if (c.doctor_id) byDoctor[c.doctor_id] = (byDoctor[c.doctor_id] || 0) + 1;
+      });
+      const clinicianRows = (cliniciansData.data ?? [])
+        .map((s: any) => ({ ...s, consults: byDoctor[s.user_id] || 0 }))
+        .filter((s: any) => s.consults > 0)
+        .sort((a: any, b: any) => b.consults - a.consults)
+        .slice(0, 6);
 
       setStats({
         patients: p.count ?? 0,
@@ -47,6 +89,17 @@ function DashboardPage() {
         staff: st.count ?? 0,
         departments: dp.count ?? 0,
       });
+      setAnalytics({
+        throughputToday: finished.length,
+        avgWaitRoutine: avgFor("routine"),
+        avgWaitUrgent: avgFor("urgent"),
+        avgWaitCritical: avgFor("critical"),
+        rxPending: (rxCounts.pending || 0) + (rxCounts.preparing || 0),
+        rxReady: rxCounts.ready || 0,
+        labPending: labCounts.ordered || 0,
+        labInProgress: labCounts.in_progress || 0,
+      });
+      setClinicians(clinicianRows);
       setRecentQueue(rq.data ?? []);
       setNotifications(notif.data ?? []);
     };
@@ -57,6 +110,9 @@ function DashboardPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "queue_entries", filter: `hospital_id=eq.${hospital.id}` }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "patients", filter: `hospital_id=eq.${hospital.id}` }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `hospital_id=eq.${hospital.id}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "consultations", filter: `hospital_id=eq.${hospital.id}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "prescriptions", filter: `hospital_id=eq.${hospital.id}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "lab_orders", filter: `hospital_id=eq.${hospital.id}` }, load)
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
@@ -71,6 +127,8 @@ function DashboardPage() {
     );
   }
 
+  const isAdmin = role === "admin";
+
   return (
     <div>
       <PageHeader
@@ -78,7 +136,7 @@ function DashboardPage() {
         subtitle={`${hospital.name} · ${role ?? "member"} view`}
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <Stat label="Patients" value={stats.patients} icon="personal_injury" />
         <Stat label="Waiting" value={stats.queueWaiting} icon="hourglass_empty" color="amber" />
         <Stat label="In consult" value={stats.queueInConsult} icon="stethoscope" color="blue" />
@@ -86,6 +144,50 @@ function DashboardPage() {
         <Stat label="Staff" value={stats.staff} icon="badge" />
         <Stat label="Departments" value={stats.departments} icon="domain" />
       </div>
+
+      {isAdmin && (
+        <div className="mb-6">
+          <div className="text-xs uppercase tracking-wide text-slate-500 mb-2 font-semibold">Live analytics</div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <AnalyticsCard title="Queue throughput" subtitle="Completed today">
+              <div className="text-4xl font-bold">{analytics.throughputToday}</div>
+              <div className="text-xs text-slate-500 mt-1">patients seen so far today</div>
+            </AnalyticsCard>
+            <AnalyticsCard title="Avg wait by urgency" subtitle="Minutes, today">
+              <WaitBar label="Critical" value={analytics.avgWaitCritical} color="bg-red-500" />
+              <WaitBar label="Urgent" value={analytics.avgWaitUrgent} color="bg-amber-500" />
+              <WaitBar label="Routine" value={analytics.avgWaitRoutine} color="bg-slate-400" />
+            </AnalyticsCard>
+            <AnalyticsCard title="Pipeline" subtitle="Prescriptions & labs open">
+              <PipelineRow label="Rx pending / preparing" value={analytics.rxPending} tone="amber" />
+              <PipelineRow label="Rx ready for collection" value={analytics.rxReady} tone="blue" />
+              <PipelineRow label="Labs to start" value={analytics.labPending} tone="slate" />
+              <PipelineRow label="Labs in progress" value={analytics.labInProgress} tone="amber" />
+            </AnalyticsCard>
+          </div>
+          <div className="mt-4 bg-white rounded-xl border border-slate-200 p-5">
+            <h3 className="font-semibold mb-3">Clinician activity today</h3>
+            {clinicians.length === 0 ? (
+              <p className="text-sm text-slate-500">No consultations logged yet today.</p>
+            ) : (
+              <div className="space-y-2">
+                {clinicians.map((c) => {
+                  const max = clinicians[0].consults;
+                  return (
+                    <div key={c.user_id} className="flex items-center gap-3">
+                      <div className="text-sm w-40 truncate">{c.full_name}</div>
+                      <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+                        <div className="bg-blue-500 h-full" style={{ width: `${(c.consults / max) * 100}%` }} />
+                      </div>
+                      <div className="text-xs font-semibold text-slate-700 w-14 text-right">{c.consults} consults</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5">
@@ -158,6 +260,41 @@ function Stat({ label, value, icon, color }: { label: string; value: number; ico
       </div>
       <div className="text-2xl font-bold">{value}</div>
       <div className="text-xs text-slate-500">{label}</div>
+    </div>
+  );
+}
+
+function AnalyticsCard({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-5">
+      <div className="text-sm font-semibold">{title}</div>
+      <div className="text-[11px] text-slate-500 mb-3">{subtitle}</div>
+      <div className="space-y-2">{children}</div>
+    </div>
+  );
+}
+
+function WaitBar({ label, value, color }: { label: string; value: number; color: string }) {
+  const width = Math.min(value, 120);
+  return (
+    <div>
+      <div className="flex items-center justify-between text-xs mb-1">
+        <span className="text-slate-600">{label}</span>
+        <span className="font-semibold">{value ? `${value} min` : "—"}</span>
+      </div>
+      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className={`${color} h-full`} style={{ width: `${(width / 120) * 100}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function PipelineRow({ label, value, tone }: { label: string; value: number; tone: string }) {
+  const dot = tone === "amber" ? "bg-amber-500" : tone === "blue" ? "bg-blue-500" : "bg-slate-400";
+  return (
+    <div className="flex items-center justify-between text-sm py-1">
+      <span className="flex items-center gap-2 text-slate-600"><span className={`w-1.5 h-1.5 rounded-full ${dot}`} />{label}</span>
+      <span className="font-semibold">{value}</span>
     </div>
   );
 }

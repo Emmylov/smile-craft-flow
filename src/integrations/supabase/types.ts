@@ -82,6 +82,129 @@ export type Database = {
           },
         ]
       }
+      chat_conversations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          hospital_id: string
+          id: string
+          is_group: boolean
+          last_message_at: string
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          hospital_id: string
+          id?: string
+          is_group?: boolean
+          last_message_at?: string
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          hospital_id?: string
+          id?: string
+          is_group?: boolean
+          last_message_at?: string
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_conversations_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_conversations_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          hospital_id: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          hospital_id: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          hospital_id?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_participants: {
+        Row: {
+          conversation_id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultations: {
         Row: {
           ai_summary: string | null
@@ -232,37 +355,46 @@ export type Database = {
       }
       lab_orders: {
         Row: {
+          completed_at: string | null
           consultation_id: string | null
           created_at: string
           hospital_id: string
           id: string
           ordered_by: string | null
           patient_id: string
+          result_url: string | null
           results: string | null
+          started_at: string | null
           status: string
           test_name: string
           updated_at: string
         }
         Insert: {
+          completed_at?: string | null
           consultation_id?: string | null
           created_at?: string
           hospital_id: string
           id?: string
           ordered_by?: string | null
           patient_id: string
+          result_url?: string | null
           results?: string | null
+          started_at?: string | null
           status?: string
           test_name: string
           updated_at?: string
         }
         Update: {
+          completed_at?: string | null
           consultation_id?: string | null
           created_at?: string
           hospital_id?: string
           id?: string
           ordered_by?: string | null
           patient_id?: string
+          result_url?: string | null
           results?: string | null
+          started_at?: string | null
           status?: string
           test_name?: string
           updated_at?: string
@@ -420,6 +552,7 @@ export type Database = {
       }
       prescriptions: {
         Row: {
+          collected_at: string | null
           consultation_id: string | null
           created_at: string
           dosage: string | null
@@ -429,10 +562,12 @@ export type Database = {
           medication: string
           patient_id: string
           prescribed_by: string | null
+          ready_at: string | null
           status: string
           updated_at: string
         }
         Insert: {
+          collected_at?: string | null
           consultation_id?: string | null
           created_at?: string
           dosage?: string | null
@@ -442,10 +577,12 @@ export type Database = {
           medication: string
           patient_id: string
           prescribed_by?: string | null
+          ready_at?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
+          collected_at?: string | null
           consultation_id?: string | null
           created_at?: string
           dosage?: string | null
@@ -455,6 +592,7 @@ export type Database = {
           medication?: string
           patient_id?: string
           prescribed_by?: string | null
+          ready_at?: string | null
           status?: string
           updated_at?: string
         }
@@ -547,6 +685,7 @@ export type Database = {
         Row: {
           assigned_doctor: string | null
           checked_in_at: string
+          completed_at: string | null
           created_at: string
           department_id: string | null
           hospital_id: string
@@ -560,6 +699,7 @@ export type Database = {
         Insert: {
           assigned_doctor?: string | null
           checked_in_at?: string
+          completed_at?: string | null
           created_at?: string
           department_id?: string | null
           hospital_id: string
@@ -573,6 +713,7 @@ export type Database = {
         Update: {
           assigned_doctor?: string | null
           checked_in_at?: string
+          completed_at?: string | null
           created_at?: string
           department_id?: string | null
           hospital_id?: string
@@ -616,9 +757,11 @@ export type Database = {
       }
       referrals: {
         Row: {
+          completed_at: string | null
           created_at: string
           hospital_id: string
           id: string
+          notes: string | null
           patient_id: string
           reason: string | null
           referred_by: string | null
@@ -628,9 +771,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          completed_at?: string | null
           created_at?: string
           hospital_id: string
           id?: string
+          notes?: string | null
           patient_id: string
           reason?: string | null
           referred_by?: string | null
@@ -640,9 +785,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          completed_at?: string | null
           created_at?: string
           hospital_id?: string
           id?: string
+          notes?: string | null
           patient_id?: string
           reason?: string | null
           referred_by?: string | null
@@ -834,6 +981,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_conversation_participant: {
+        Args: { _conv_id: string; _user_id: string }
         Returns: boolean
       }
       verify_workspace: {

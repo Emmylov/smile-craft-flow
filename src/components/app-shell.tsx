@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useKairos, type AppRole } from "@/hooks/use-kairos";
+import kairosLogo from "@/assets/kairos-logo.png.asset.json";
 
 const Icon = ({ name, className = "" }: { name: string; className?: string }) => (
   <span className={`material-symbols-outlined ${className}`}>{name}</span>
@@ -14,6 +15,9 @@ const NAV: NavItem[] = [
   { to: "/queue", label: "Queue", icon: "groups" },
   { to: "/patients", label: "Patients", icon: "personal_injury" },
   { to: "/appointments", label: "Appointments", icon: "event" },
+  { to: "/pharmacy", label: "Pharmacy", icon: "medication" },
+  { to: "/laboratory", label: "Laboratory", icon: "science" },
+  { to: "/chat", label: "Messages", icon: "chat" },
   { to: "/departments", label: "Departments", icon: "domain", roles: ["admin"] },
   { to: "/staff", label: "Staff", icon: "badge", roles: ["admin"] },
   { to: "/settings", label: "Settings", icon: "settings", roles: ["admin"] },
@@ -36,9 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="w-64 bg-slate-950 text-slate-100 flex flex-col shrink-0">
         <div className="px-5 py-5 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center font-bold text-white">
-              K
-            </div>
+            <img src={kairosLogo.url} alt="Kairos" className="w-9 h-9 rounded-lg object-cover" />
             <div>
               <div className="font-bold text-sm">Kairos Core</div>
               <div className="text-[11px] text-slate-400 truncate max-w-[160px]">
@@ -47,7 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
         </div>
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {items.map((item) => {
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
@@ -78,17 +80,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             onClick={handleSignOut}
             className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
           >
-            <Icon name="logout" className="text-[18px]" />
-            Sign out
+            <Icon name="logout" className="text-[18px]" /> Sign out
           </button>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto">
-        {loading ? (
-          <div className="p-8 text-slate-500 text-sm">Loading…</div>
-        ) : (
-          <div className="p-8 max-w-7xl mx-auto">{children}</div>
-        )}
+      <main className="flex-1 overflow-x-hidden">
+        <div className="max-w-7xl mx-auto p-6 md:p-8">
+          {loading ? <div className="text-slate-500">Loading workspace…</div> : children}
+        </div>
       </main>
     </div>
   );
@@ -104,7 +103,7 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex items-start justify-between gap-4">
+    <div className="flex items-start justify-between mb-6 gap-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
         {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
