@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate, useParams, useRouterState } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { createAuraThread, getAuraThread, listAuraThreads } from "@/lib/aura.functions";
@@ -35,7 +35,10 @@ function AuraChatWorkspace({ threadId }: { threadId: string }) {
   const [threadTitle, setThreadTitle] = useState("Aura thread");
   const [initialMessages, setInitialMessages] = useState<UIMessage[]>([]);
   const [ready, setReady] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const focusComposer = () => {
+    setTimeout(() => document.querySelector<HTMLTextAreaElement>('textarea[name="message"]')?.focus(), 80);
+  };
 
   const context = useMemo(() => ({ pagePath: pathname, role: null, patientId: null, patientName: null }), [pathname]);
 
@@ -76,7 +79,7 @@ function AuraChatWorkspace({ threadId }: { threadId: string }) {
         setMessages(threadData.messages);
         setThreads(threadList as ThreadRow[]);
         setReady(true);
-        setTimeout(() => textareaRef.current?.focus(), 80);
+        focusComposer();
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Aura thread could not load.");
         navigate({ to: "/aura", replace: true });
@@ -91,7 +94,7 @@ function AuraChatWorkspace({ threadId }: { threadId: string }) {
   useEffect(() => {
     if (status === "ready") {
       refreshThreads();
-      setTimeout(() => textareaRef.current?.focus(), 80);
+      focusComposer();
     }
   }, [status]);
 
@@ -170,7 +173,7 @@ function AuraChatWorkspace({ threadId }: { threadId: string }) {
           {error && <div className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm text-red-700">{error.message}</div>}
           <div className="border-t border-slate-100 p-4">
             <PromptInput onSubmit={submit}>
-              <PromptInputTextarea ref={textareaRef} placeholder="Ask Aura about this hospital workspace…" />
+              <PromptInputTextarea placeholder="Ask Aura about this hospital workspace…" />
               <PromptInputFooter className="justify-between">
                 <div className="text-xs text-slate-500">Clinical outputs should be reviewed before saving.</div>
                 <PromptInputSubmit status={status} disabled={status === "submitted" || status === "streaming"} />
