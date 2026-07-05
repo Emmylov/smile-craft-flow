@@ -36,9 +36,10 @@ function DashboardPage() {
   useEffect(() => {
     if (!hospital?.id) return;
     const load = async () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayIso = today.toISOString();
+      try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayIso = today.toISOString();
 
       const [p, qw, qi, apt, st, dp, rq, notif, allTodayQueue, rxAll, labAll, cliniciansData] = await Promise.all([
         supabase.from("patients").select("id", { count: "exact", head: true }).eq("hospital_id", hospital.id),
@@ -102,7 +103,10 @@ function DashboardPage() {
       });
       setClinicians(clinicianRows);
       setRecentQueue(rq.data ?? []);
-      setNotifications(notif.data ?? []);
+        setNotifications(notif.data ?? []);
+      } catch (error) {
+        console.error("Failed to load dashboard", error);
+      }
     };
     load();
 

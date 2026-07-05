@@ -33,46 +33,51 @@ export function useKairos(): KairosContext & { refresh: () => Promise<void> } {
   });
 
   const load = async () => {
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData.user;
-    if (!user) {
-      setState((s) => ({ ...s, loading: false }));
-      return;
-    }
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData.user;
+      if (!user) {
+        setState((s) => ({ ...s, loading: false }));
+        return;
+      }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, full_name, hospital_id, department_id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    let hospital = null;
-    let role: AppRole | null = null;
-    if (profile?.hospital_id) {
-      const { data: h } = await supabase
-        .from("hospitals")
-        .select("id, name, workspace_id")
-        .eq("id", profile.hospital_id)
-        .maybeSingle();
-      hospital = h ?? null;
-
-      const { data: r } = await supabase
-        .from("user_roles")
-        .select("role")
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, full_name, hospital_id, department_id")
         .eq("user_id", user.id)
-        .eq("hospital_id", profile.hospital_id)
         .maybeSingle();
-      role = (r?.role as AppRole) ?? null;
-    }
 
-    setState({
-      userId: user.id,
-      email: user.email ?? null,
-      profile: profile ?? null,
-      hospital,
-      role,
-      loading: false,
-    });
+      let hospital = null;
+      let role: AppRole | null = null;
+      if (profile?.hospital_id) {
+        const { data: h } = await supabase
+          .from("hospitals")
+          .select("id, name, workspace_id")
+          .eq("id", profile.hospital_id)
+          .maybeSingle();
+        hospital = h ?? null;
+
+        const { data: r } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("hospital_id", profile.hospital_id)
+          .maybeSingle();
+        role = (r?.role as AppRole) ?? null;
+      }
+
+      setState({
+        userId: user.id,
+        email: user.email ?? null,
+        profile: profile ?? null,
+        hospital,
+        role,
+        loading: false,
+      });
+    } catch (error) {
+      console.error("Failed to load Kairos workspace", error);
+      setState((s) => ({ ...s, loading: false }));
+    }
   };
 
   useEffect(() => {
