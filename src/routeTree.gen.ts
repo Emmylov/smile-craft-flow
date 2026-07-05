@@ -24,9 +24,13 @@ import { Route as AuthenticatedLaboratoryRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDepartmentsRouteImport } from './routes/_authenticated/departments'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
+import { Route as AuthenticatedAuraRouteImport } from './routes/_authenticated/aura'
 import { Route as AuthenticatedAppointmentsRouteImport } from './routes/_authenticated/appointments'
+import { Route as ApiAuraDictateRouteImport } from './routes/api/aura/dictate'
+import { Route as ApiAuraChatRouteImport } from './routes/api/aura/chat'
 import { Route as AuthenticatedPatientsIdRouteImport } from './routes/_authenticated/patients.$id'
 import { Route as AuthenticatedConsultationIdRouteImport } from './routes/_authenticated/consultation.$id'
+import { Route as AuthenticatedAuraThreadIdRouteImport } from './routes/_authenticated/aura.$threadId'
 
 const ProductRoute = ProductRouteImport.update({
   id: '/product',
@@ -103,12 +107,27 @@ const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAuraRoute = AuthenticatedAuraRouteImport.update({
+  id: '/aura',
+  path: '/aura',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAppointmentsRoute =
   AuthenticatedAppointmentsRouteImport.update({
     id: '/appointments',
     path: '/appointments',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiAuraDictateRoute = ApiAuraDictateRouteImport.update({
+  id: '/api/aura/dictate',
+  path: '/api/aura/dictate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuraChatRoute = ApiAuraChatRouteImport.update({
+  id: '/api/aura/chat',
+  path: '/api/aura/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPatientsIdRoute = AuthenticatedPatientsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -120,6 +139,12 @@ const AuthenticatedConsultationIdRoute =
     path: '/consultation/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAuraThreadIdRoute =
+  AuthenticatedAuraThreadIdRouteImport.update({
+    id: '/$threadId',
+    path: '/$threadId',
+    getParentRoute: () => AuthenticatedAuraRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -128,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/product': typeof ProductRoute
   '/appointments': typeof AuthenticatedAppointmentsRoute
+  '/aura': typeof AuthenticatedAuraRouteWithChildren
   '/chat': typeof AuthenticatedChatRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
@@ -137,8 +163,11 @@ export interface FileRoutesByFullPath {
   '/queue': typeof AuthenticatedQueueRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
+  '/aura/$threadId': typeof AuthenticatedAuraThreadIdRoute
   '/consultation/$id': typeof AuthenticatedConsultationIdRoute
   '/patients/$id': typeof AuthenticatedPatientsIdRoute
+  '/api/aura/chat': typeof ApiAuraChatRoute
+  '/api/aura/dictate': typeof ApiAuraDictateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -147,6 +176,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/product': typeof ProductRoute
   '/appointments': typeof AuthenticatedAppointmentsRoute
+  '/aura': typeof AuthenticatedAuraRouteWithChildren
   '/chat': typeof AuthenticatedChatRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
@@ -156,8 +186,11 @@ export interface FileRoutesByTo {
   '/queue': typeof AuthenticatedQueueRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
+  '/aura/$threadId': typeof AuthenticatedAuraThreadIdRoute
   '/consultation/$id': typeof AuthenticatedConsultationIdRoute
   '/patients/$id': typeof AuthenticatedPatientsIdRoute
+  '/api/aura/chat': typeof ApiAuraChatRoute
+  '/api/aura/dictate': typeof ApiAuraDictateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -168,6 +201,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/product': typeof ProductRoute
   '/_authenticated/appointments': typeof AuthenticatedAppointmentsRoute
+  '/_authenticated/aura': typeof AuthenticatedAuraRouteWithChildren
   '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/departments': typeof AuthenticatedDepartmentsRoute
@@ -177,8 +211,11 @@ export interface FileRoutesById {
   '/_authenticated/queue': typeof AuthenticatedQueueRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
+  '/_authenticated/aura/$threadId': typeof AuthenticatedAuraThreadIdRoute
   '/_authenticated/consultation/$id': typeof AuthenticatedConsultationIdRoute
   '/_authenticated/patients/$id': typeof AuthenticatedPatientsIdRoute
+  '/api/aura/chat': typeof ApiAuraChatRoute
+  '/api/aura/dictate': typeof ApiAuraDictateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -189,6 +226,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/product'
     | '/appointments'
+    | '/aura'
     | '/chat'
     | '/dashboard'
     | '/departments'
@@ -198,8 +236,11 @@ export interface FileRouteTypes {
     | '/queue'
     | '/settings'
     | '/staff'
+    | '/aura/$threadId'
     | '/consultation/$id'
     | '/patients/$id'
+    | '/api/aura/chat'
+    | '/api/aura/dictate'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -208,6 +249,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/product'
     | '/appointments'
+    | '/aura'
     | '/chat'
     | '/dashboard'
     | '/departments'
@@ -217,8 +259,11 @@ export interface FileRouteTypes {
     | '/queue'
     | '/settings'
     | '/staff'
+    | '/aura/$threadId'
     | '/consultation/$id'
     | '/patients/$id'
+    | '/api/aura/chat'
+    | '/api/aura/dictate'
   id:
     | '__root__'
     | '/'
@@ -228,6 +273,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/product'
     | '/_authenticated/appointments'
+    | '/_authenticated/aura'
     | '/_authenticated/chat'
     | '/_authenticated/dashboard'
     | '/_authenticated/departments'
@@ -237,8 +283,11 @@ export interface FileRouteTypes {
     | '/_authenticated/queue'
     | '/_authenticated/settings'
     | '/_authenticated/staff'
+    | '/_authenticated/aura/$threadId'
     | '/_authenticated/consultation/$id'
     | '/_authenticated/patients/$id'
+    | '/api/aura/chat'
+    | '/api/aura/dictate'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -248,6 +297,8 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   ProductRoute: typeof ProductRoute
+  ApiAuraChatRoute: typeof ApiAuraChatRoute
+  ApiAuraDictateRoute: typeof ApiAuraDictateRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -357,12 +408,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/aura': {
+      id: '/_authenticated/aura'
+      path: '/aura'
+      fullPath: '/aura'
+      preLoaderRoute: typeof AuthenticatedAuraRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/appointments': {
       id: '/_authenticated/appointments'
       path: '/appointments'
       fullPath: '/appointments'
       preLoaderRoute: typeof AuthenticatedAppointmentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/aura/dictate': {
+      id: '/api/aura/dictate'
+      path: '/api/aura/dictate'
+      fullPath: '/api/aura/dictate'
+      preLoaderRoute: typeof ApiAuraDictateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/aura/chat': {
+      id: '/api/aura/chat'
+      path: '/api/aura/chat'
+      fullPath: '/api/aura/chat'
+      preLoaderRoute: typeof ApiAuraChatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/patients/$id': {
       id: '/_authenticated/patients/$id'
@@ -378,8 +450,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConsultationIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/aura/$threadId': {
+      id: '/_authenticated/aura/$threadId'
+      path: '/$threadId'
+      fullPath: '/aura/$threadId'
+      preLoaderRoute: typeof AuthenticatedAuraThreadIdRouteImport
+      parentRoute: typeof AuthenticatedAuraRoute
+    }
   }
 }
+
+interface AuthenticatedAuraRouteChildren {
+  AuthenticatedAuraThreadIdRoute: typeof AuthenticatedAuraThreadIdRoute
+}
+
+const AuthenticatedAuraRouteChildren: AuthenticatedAuraRouteChildren = {
+  AuthenticatedAuraThreadIdRoute: AuthenticatedAuraThreadIdRoute,
+}
+
+const AuthenticatedAuraRouteWithChildren =
+  AuthenticatedAuraRoute._addFileChildren(AuthenticatedAuraRouteChildren)
 
 interface AuthenticatedPatientsRouteChildren {
   AuthenticatedPatientsIdRoute: typeof AuthenticatedPatientsIdRoute
@@ -396,6 +486,7 @@ const AuthenticatedPatientsRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppointmentsRoute: typeof AuthenticatedAppointmentsRoute
+  AuthenticatedAuraRoute: typeof AuthenticatedAuraRouteWithChildren
   AuthenticatedChatRoute: typeof AuthenticatedChatRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDepartmentsRoute: typeof AuthenticatedDepartmentsRoute
@@ -410,6 +501,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppointmentsRoute: AuthenticatedAppointmentsRoute,
+  AuthenticatedAuraRoute: AuthenticatedAuraRouteWithChildren,
   AuthenticatedChatRoute: AuthenticatedChatRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDepartmentsRoute: AuthenticatedDepartmentsRoute,
@@ -432,17 +524,9 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   ProductRoute: ProductRoute,
+  ApiAuraChatRoute: ApiAuraChatRoute,
+  ApiAuraDictateRoute: ApiAuraDictateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

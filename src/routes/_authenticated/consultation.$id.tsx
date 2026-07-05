@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useKairos } from "@/hooks/use-kairos";
 import { PageHeader } from "@/components/app-shell";
+import { ClinicalDictationPanel } from "@/components/clinical-dictation-panel";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/consultation/$id")({
@@ -195,6 +196,18 @@ function ConsultationPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
+          <ClinicalDictationPanel
+            patientId={patient.id}
+            patientName={patient.full_name}
+            onOrganized={(result) =>
+              setConsultation((current) => ({
+                complaint: result.complaint || current.complaint,
+                diagnosis: result.diagnosis || current.diagnosis,
+                notes: result.notes || current.notes,
+              }))
+            }
+          />
+
           <div className="bg-white rounded-xl border border-slate-200 p-5">
             <h3 className="font-semibold mb-3">Consultation notes</h3>
             <div className="space-y-3">
@@ -334,9 +347,9 @@ function ConsultationPage() {
             )}
           </div>
           <div className="bg-slate-900 text-white rounded-xl p-5">
-            <div className="text-xs uppercase tracking-wide text-slate-400 mb-2">AI Summary</div>
+            <div className="text-xs uppercase tracking-wide text-slate-400 mb-2">Aura Summary</div>
             <div className="text-sm text-slate-300">
-              Gemini integration coming soon — this panel will surface an AI-generated summary of the patient's history, prior encounters, and open items.
+              Open Aura from the sidebar to summarize this patient, generate SOAP notes, compare results, or prepare referrals and discharge instructions.
             </div>
           </div>
         </div>

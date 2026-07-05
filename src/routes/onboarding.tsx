@@ -15,7 +15,7 @@ const HOSPITAL_TYPES = ["General Hospital", "Teaching Hospital", "Specialist Cli
 type Step = 0 | 1 | 2 | 3 | 4 | 5;
 
 const CHAPTERS: { title: string; sub: string; guide: string }[] = [
-  { title: "Welcome to Kairos", sub: "Let's set up your hospital's operating system", guide: "Hi, I'm Aria. I'll walk you through onboarding your hospital — it'll only take a few minutes." },
+  { title: "Welcome to Kairos", sub: "Let's set up your hospital's operating system", guide: "Hi, I'm Aura. I'll walk you through onboarding your hospital — it'll only take a few minutes." },
   { title: "Tell me about your hospital", sub: "Chapter 1 · Identity", guide: "Every hospital has a story. Let's start with the basics — the name, the type, and where you're located." },
   { title: "Departments that make you tick", sub: "Chapter 2 · Structure", guide: "We'll pre-load the departments most hospitals use. You can tune this later from Settings." },
   { title: "Who's in charge?", sub: "Chapter 3 · Administrator", guide: "Every workspace needs a captain. You'll be the first admin — you can invite the rest of your team from the dashboard." },
@@ -148,9 +148,9 @@ function OnboardingPage() {
               <div className="animate-[fadeUp_.5s_ease-out]" key={step}>
                 {/* Guide bubble */}
                 <div className="flex items-start gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-violet-500 flex items-center justify-center text-sm font-bold shrink-0 shadow-lg shadow-blue-500/30">A</div>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-violet-500 flex items-center justify-center text-sm font-bold shrink-0 shadow-lg shadow-blue-500/30 animate-[float_3s_ease-in-out_infinite]">A</div>
                   <div className="bg-white/[0.06] backdrop-blur-xl border border-white/10 rounded-2xl rounded-tl-sm px-4 py-3 max-w-lg">
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-blue-300 mb-0.5">Aria · Your guide</div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-blue-300 mb-0.5">Aura · Your guide</div>
                     <p className="text-sm text-slate-100">{chapter.guide}</p>
                   </div>
                 </div>
@@ -229,7 +229,7 @@ function OnboardingPage() {
                       <div className="relative w-24 h-24 mx-auto mb-6">
                         <div className="absolute inset-0 rounded-full border-2 border-blue-400/30" />
                         <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-400 animate-spin" />
-                        <img src={kairosLogo.url} alt="" className="absolute inset-4 rounded-full" />
+                        <img src={kairosLogo.url} alt="" className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full object-cover" />
                       </div>
                       <div className="space-y-1 text-sm text-slate-300">
                         <LoadingLine text="Provisioning workspace" delay={0} />

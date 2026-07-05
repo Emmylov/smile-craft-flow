@@ -15,7 +15,8 @@ type Conversation = {
   is_group: boolean;
   last_message_at: string;
   created_by: string | null;
-  participants: { user_id: string; full_name: string | null }[];
+  participants: { user_id: string; full_name: string | null; last_read_at: string | null; typing_until: string | null; last_seen_at: string | null }[];
+  unread: number;
 };
 
 type Staff = { user_id: string; full_name: string };
@@ -28,6 +29,8 @@ function ChatPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
   const [newOpen, setNewOpen] = useState(false);
+  const [typingNames, setTypingNames] = useState<string[]>([]);
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const loadConversations = async () => {
@@ -49,7 +52,11 @@ function ChatPage() {
       .order("last_message_at", { ascending: false });
     const { data: parts } = await supabase
       .from("chat_participants")
-      .select("conversation_id, user_id")
+      .select("conversation_id, user_id, last_read_at, typing_until, last_seen_at")
+      .in("conversation_id", ids);
+    const { data: messageRows } = await supabase
+      .from("chat_messages")
+      .select("conversation_id, sender_id, created_at")
       .in("conversation_id", ids);
     const userIds = Array.from(new Set((parts ?? []).map((p) => p.user_id)));
     const { data: profiles } = await supabase
@@ -57,12 +64,21 @@ function ChatPage() {
       .select("user_id, full_name")
       .in("user_id", userIds);
     const nameMap = new Map((profiles ?? []).map((p) => [p.user_id, p.full_name]));
-    const withParts = (convs ?? []).map((c) => ({
-      ...c,
-      participants: (parts ?? [])
+    const withParts = (convs ?? []).map((c) => {
+      const participants = (parts ?? [])
         .filter((p) => p.conversation_id === c.id)
-        .map((p) => ({ user_id: p.user_id, full_name: nameMap.get(p.user_id) ?? null })),
-    })) as Conversation[];
+        .map((p) => ({
+          user_id: p.user_id,
+          full_name: nameMap.get(p.user_id) ?? null,
+          last_read_at: p.last_read_at ?? null,
+          typing_until: p.typing_until ?? null,
+          last_seen_at: p.last_seen_at ?? null,
+        }));
+      const me = participants.find((p) => p.user_id === userId);
+      const lastRead = me?.last_read_at ? new Date(me.last_read_at).getTime() : 0;
+      const unread = (messageRows ?? []).filter((m) => m.conversation_id === c.id && m.sender_id !== userId && new Date(m.created_at).getTime() > lastRead).length;
+      return { ...c, participants, unread };
+    }) as Conversation[];
     setConversations(withParts);
   };
 
@@ -88,7 +104,18 @@ function ChatPage() {
       .eq("conversation_id", convId)
       .order("created_at", { ascending: true });
     setMessages(data ?? []);
+    await markRead(convId);
     setTimeout(() => scrollRef.current?.scrollTo({ top: 9e9 }), 50);
+  };
+
+  const markRead = async (convId: string) => {
+    if (!userId) return;
+    await supabase
+      .from("chat_participants")
+      .update({ last_read_at: new Date().toISOString(), last_seen_at: new Date().toISOString(), typing_until: null })
+      .eq("conversation_id", convId)
+      .eq("user_id", userId);
+    loadConversations();
   };
 
   useEffect(() => {
@@ -101,9 +128,13 @@ function ChatPage() {
         { event: "INSERT", schema: "public", table: "chat_messages", filter: `conversation_id=eq.${activeId}` },
         (payload) => {
           setMessages((m) => [...m, payload.new]);
+          if ((payload.new as any).sender_id !== userId) markRead(activeId);
           setTimeout(() => scrollRef.current?.scrollTo({ top: 9e9 }), 50);
         },
       )
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_participants", filter: `conversation_id=eq.${activeId}` }, () => {
+        loadConversations();
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
@@ -125,6 +156,32 @@ function ChatPage() {
   }, [userId]);
 
   const active = useMemo(() => conversations.find((c) => c.id === activeId) ?? null, [conversations, activeId]);
+
+  useEffect(() => {
+    if (!active || !userId) {
+      setTypingNames([]);
+      return;
+    }
+    const now = Date.now();
+    setTypingNames(
+      active.participants
+        .filter((p) => p.user_id !== userId && p.typing_until && new Date(p.typing_until).getTime() > now)
+        .map((p) => p.full_name ?? "Someone"),
+    );
+  }, [active, userId]);
+
+  const pulseTyping = async () => {
+    if (!activeId || !userId) return;
+    if (typingTimer.current) clearTimeout(typingTimer.current);
+    await supabase
+      .from("chat_participants")
+      .update({ typing_until: new Date(Date.now() + 4500).toISOString(), last_seen_at: new Date().toISOString() })
+      .eq("conversation_id", activeId)
+      .eq("user_id", userId);
+    typingTimer.current = setTimeout(() => {
+      supabase.from("chat_participants").update({ typing_until: null }).eq("conversation_id", activeId).eq("user_id", userId);
+    }, 5000);
+  };
 
   const send = async () => {
     if (!text.trim() || !activeId || !hospital?.id || !userId) return;
@@ -212,7 +269,10 @@ function ChatPage() {
                       {c.is_group ? "G" : (nameFor(c)[0] ?? "?").toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{nameFor(c)}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-medium truncate">{nameFor(c)}</div>
+                        {c.unread > 0 && <span className="ml-auto rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-semibold text-white">{c.unread}</span>}
+                      </div>
                       <div className="text-[11px] text-slate-500 truncate">
                         {c.is_group ? `${c.participants.length} members` : "Direct"} · {new Date(c.last_message_at).toLocaleDateString()}
                       </div>
@@ -236,6 +296,7 @@ function ChatPage() {
                 <div className="text-[11px] text-slate-500">
                   {active.is_group ? active.participants.map((p) => p.full_name).filter(Boolean).join(", ") : "Direct message"}
                 </div>
+                {typingNames.length > 0 && <div className="text-[11px] font-medium text-blue-600">{typingNames.join(", ")} typing…</div>}
               </div>
               <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-2 bg-slate-50">
                 {messages.map((m) => {
@@ -251,6 +312,7 @@ function ChatPage() {
                         <div className="whitespace-pre-wrap">{m.body}</div>
                         <div className={`text-[10px] mt-0.5 ${mine ? "text-blue-100" : "text-slate-400"}`}>
                           {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          {mine && active.participants.some((p) => p.user_id !== userId && p.last_read_at && new Date(p.last_read_at).getTime() >= new Date(m.created_at).getTime()) && " · Read"}
                         </div>
                       </div>
                     </div>
@@ -260,7 +322,10 @@ function ChatPage() {
               <div className="border-t border-slate-100 p-3 flex gap-2">
                 <input
                   value={text}
-                  onChange={(e) => setText(e.target.value)}
+                  onChange={(e) => {
+                    setText(e.target.value);
+                    pulseTyping();
+                  }}
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), send())}
                   placeholder={`Message ${nameFor(active)}`}
                   className="flex-1 border border-slate-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
