@@ -9,6 +9,27 @@ export const Route = createFileRoute("/_authenticated/patients/$id")({
   component: PatientDetail,
 });
 
+const RX_STATUS: Record<string, string> = {
+  pending: "bg-slate-100 text-slate-700",
+  preparing: "bg-amber-100 text-amber-700",
+  ready: "bg-blue-100 text-blue-700",
+  collected: "bg-emerald-100 text-emerald-700",
+};
+
+const LAB_STATUS: Record<string, string> = {
+  ordered: "bg-slate-100 text-slate-700",
+  in_progress: "bg-amber-100 text-amber-700",
+  completed: "bg-emerald-100 text-emerald-700",
+};
+
+const REF_STATUS: Record<string, string> = {
+  pending: "bg-slate-100 text-slate-700",
+  accepted: "bg-blue-100 text-blue-700",
+  in_progress: "bg-amber-100 text-amber-700",
+  completed: "bg-emerald-100 text-emerald-700",
+  declined: "bg-red-100 text-red-700",
+};
+
 function PatientDetail() {
   const { id } = useParams({ from: "/_authenticated/patients/$id" });
   const { hospital, role } = useKairos();
@@ -17,17 +38,19 @@ function PatientDetail() {
   const [consultations, setConsultations] = useState<any[]>([]);
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
   const [labs, setLabs] = useState<any[]>([]);
+  const [referrals, setReferrals] = useState<any[]>([]);
   const [queueEntry, setQueueEntry] = useState<any>(null);
   const [departments, setDepartments] = useState<any[]>([]);
 
   const load = async () => {
     if (!hospital?.id) return;
-    const [p, v, c, rx, lb, qe, dp] = await Promise.all([
+    const [p, v, c, rx, lb, rf, qe, dp] = await Promise.all([
       supabase.from("patients").select("*").eq("id", id).maybeSingle(),
       supabase.from("vitals").select("*").eq("patient_id", id).order("created_at", { ascending: false }),
       supabase.from("consultations").select("*").eq("patient_id", id).order("created_at", { ascending: false }),
       supabase.from("prescriptions").select("*").eq("patient_id", id).order("created_at", { ascending: false }),
       supabase.from("lab_orders").select("*").eq("patient_id", id).order("created_at", { ascending: false }),
+      supabase.from("referrals").select("*, departments(name)").eq("patient_id", id).order("created_at", { ascending: false }),
       supabase.from("queue_entries").select("*").eq("patient_id", id).not("status", "eq", "completed").maybeSingle(),
       supabase.from("departments").select("*").eq("hospital_id", hospital.id),
     ]);
@@ -36,11 +59,25 @@ function PatientDetail() {
     setConsultations(c.data ?? []);
     setPrescriptions(rx.data ?? []);
     setLabs(lb.data ?? []);
+    setReferrals(rf.data ?? []);
     setQueueEntry(qe.data);
     setDepartments(dp.data ?? []);
   };
 
-  useEffect(() => { load(); }, [id, hospital?.id]);
+  useEffect(() => {
+    load();
+    if (!hospital?.id) return;
+    const ch = supabase
+      .channel(`patient-${id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "prescriptions", filter: `patient_id=eq.${id}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "lab_orders", filter: `patient_id=eq.${id}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "referrals", filter: `patient_id=eq.${id}` }, load)
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, hospital?.id]);
 
   const checkIn = async (departmentId: string, urgency: string) => {
     if (!hospital?.id) return;
@@ -59,6 +96,13 @@ function PatientDetail() {
       message: `${patient?.full_name} added to the queue (${urgency})`,
     });
     load();
+  };
+
+  const updateReferralStatus = async (r: any, status: string) => {
+    const patch: any = { status };
+    if (status === "completed") patch.completed_at = new Date().toISOString();
+    const { error } = await supabase.from("referrals").update(patch).eq("id", r.id);
+    if (error) toast.error(error.message);
   };
 
   if (!patient) return <div className="text-slate-500">Loading…</div>;
@@ -143,12 +187,14 @@ function PatientDetail() {
           {prescriptions.length === 0 ? <p className="text-sm text-slate-500">None.</p> : (
             <div className="space-y-2 text-sm">
               {prescriptions.map((p) => (
-                <div key={p.id} className="flex justify-between border-b border-slate-100 pb-2 last:border-0">
+                <div key={p.id} className="flex justify-between items-start border-b border-slate-100 pb-2 last:border-0">
                   <div>
                     <div className="font-medium">{p.medication}</div>
                     <div className="text-xs text-slate-500">{p.dosage} · {p.instructions}</div>
+                    {p.ready_at && <div className="text-[11px] text-blue-600 mt-0.5">Ready {new Date(p.ready_at).toLocaleString()}</div>}
+                    {p.collected_at && <div className="text-[11px] text-emerald-600">Collected {new Date(p.collected_at).toLocaleString()}</div>}
                   </div>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100">{p.status}</span>
+                  <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${RX_STATUS[p.status] ?? RX_STATUS.pending}`}>{p.status}</span>
                 </div>
               ))}
             </div>
@@ -159,17 +205,61 @@ function PatientDetail() {
           {labs.length === 0 ? <p className="text-sm text-slate-500">None.</p> : (
             <div className="space-y-2 text-sm">
               {labs.map((l) => (
-                <div key={l.id} className="flex justify-between border-b border-slate-100 pb-2 last:border-0">
-                  <div>
+                <div key={l.id} className="border-b border-slate-100 pb-2 last:border-0">
+                  <div className="flex justify-between items-start">
                     <div className="font-medium">{l.test_name}</div>
-                    {l.results && <div className="text-xs text-slate-500">{l.results}</div>}
+                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${LAB_STATUS[l.status] ?? LAB_STATUS.ordered}`}>{l.status.replace(/_/g, " ")}</span>
                   </div>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100">{l.status}</span>
+                  {l.results && <div className="text-xs text-slate-600 mt-1 bg-slate-50 p-2 rounded whitespace-pre-wrap">{l.results}</div>}
+                  {l.result_url && (
+                    <a href={l.result_url} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:text-blue-500 inline-flex items-center gap-1 mt-1">
+                      <span className="material-symbols-outlined text-[14px]">description</span>
+                      Uploaded result
+                    </a>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mt-6 bg-white rounded-xl border border-slate-200 p-5">
+        <h3 className="font-semibold mb-3">Referrals</h3>
+        {referrals.length === 0 ? (
+          <p className="text-sm text-slate-500">No referrals for this patient.</p>
+        ) : (
+          <div className="space-y-3">
+            {referrals.map((r) => (
+              <div key={r.id} className="border-l-2 border-violet-500 pl-3 py-1">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-medium">
+                      → {r.departments?.name ?? r.target_specialist ?? "Specialist"}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-0.5">{new Date(r.created_at).toLocaleString()}</div>
+                    {r.reason && <div className="text-sm mt-1">{r.reason}</div>}
+                    {r.notes && <div className="text-xs text-slate-600 mt-1 italic">{r.notes}</div>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${REF_STATUS[r.status] ?? REF_STATUS.pending}`}>{r.status.replace(/_/g, " ")}</span>
+                    <select
+                      value={r.status}
+                      onChange={(e) => updateReferralStatus(r, e.target.value)}
+                      className="text-xs border border-slate-200 rounded-lg px-2 py-1"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="accepted">Accepted</option>
+                      <option value="in_progress">In progress</option>
+                      <option value="completed">Completed</option>
+                      <option value="declined">Declined</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
