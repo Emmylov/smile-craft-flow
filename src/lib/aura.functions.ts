@@ -1,14 +1,25 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { UIMessage } from "ai";
 
 type AuraThreadInput = { title?: string } | undefined;
+type SerializableAuraMessage = {
+  id: string;
+  role: "system" | "user" | "assistant";
+  parts: { type: "text"; text: string }[];
+};
 
-function rowToMessage(row: { ai_message_id: string | null; id: string; role: string; parts: unknown }): UIMessage {
+function rowToMessage(row: { ai_message_id: string | null; id: string; role: string; parts: unknown }): SerializableAuraMessage {
+  const parts = Array.isArray(row.parts)
+    ? row.parts
+        .filter((part): part is { type: "text"; text: string } =>
+          !!part && typeof part === "object" && "type" in part && "text" in part && part.type === "text" && typeof part.text === "string",
+        )
+        .map((part) => ({ type: "text" as const, text: part.text }))
+    : [];
   return {
     id: row.ai_message_id ?? row.id,
-    role: row.role as UIMessage["role"],
-    parts: Array.isArray(row.parts) ? (row.parts as UIMessage["parts"]) : [],
+    role: row.role === "system" || row.role === "user" || row.role === "assistant" ? row.role : "assistant",
+    parts,
   };
 }
 
