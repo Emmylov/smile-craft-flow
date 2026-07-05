@@ -155,6 +155,7 @@ export type Database = {
       }
       aura_messages: {
         Row: {
+          ai_message_id: string | null
           context: Json
           created_at: string
           hospital_id: string
@@ -165,6 +166,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_message_id?: string | null
           context?: Json
           created_at?: string
           hospital_id: string
@@ -175,6 +177,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_message_id?: string | null
           context?: Json
           created_at?: string
           hospital_id?: string
