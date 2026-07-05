@@ -18,6 +18,7 @@ export const Route = createFileRoute("/_authenticated/aura/$threadId")({
 });
 
 type ThreadRow = { id: string; title: string; pinned: boolean; last_message_at: string };
+type AuraThreadResult = { thread: { title: string }; messages: UIMessage[] };
 
 function AuraThreadPage() {
   const { threadId } = useParams({ from: "/_authenticated/aura/$threadId" });
@@ -67,8 +68,9 @@ function AuraChatWorkspace({ threadId }: { threadId: string }) {
     let cancelled = false;
     const load = async () => {
       try {
-        const [threadData, threadList] = await Promise.all([getThread({ data: { threadId } }), listThreads()]);
+        const [threadDataRaw, threadList] = await Promise.all([getThread({ data: { threadId } }), listThreads()]);
         if (cancelled) return;
+        const threadData = threadDataRaw as AuraThreadResult;
         setThreadTitle(threadData.thread.title);
         setInitialMessages(threadData.messages);
         setMessages(threadData.messages);

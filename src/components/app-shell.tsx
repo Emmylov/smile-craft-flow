@@ -18,6 +18,7 @@ const NAV: NavItem[] = [
   { to: "/pharmacy", label: "Pharmacy", icon: "medication" },
   { to: "/laboratory", label: "Laboratory", icon: "science" },
   { to: "/chat", label: "Messages", icon: "chat" },
+  { to: "/aura", label: "Aura", icon: "neurology" },
   { to: "/departments", label: "Departments", icon: "domain", roles: ["admin"] },
   { to: "/staff", label: "Staff", icon: "badge", roles: ["admin"] },
   { to: "/settings", label: "Settings", icon: "settings", roles: ["admin"] },
@@ -86,7 +87,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
       <main className="flex-1 overflow-x-hidden">
         <div className="max-w-7xl mx-auto p-6 md:p-8">
-          {loading ? <div className="text-slate-500">Loading workspace…</div> : children}
+          {loading ? (
+            <div className="flex min-h-[70vh] items-center justify-center text-slate-500">
+              <div className="text-center">
+                <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
+                Loading workspace…
+              </div>
+            </div>
+          ) : children}
         </div>
       </main>
     </div>

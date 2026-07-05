@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useKairos } from "@/hooks/use-kairos";
 import { PageHeader } from "@/components/app-shell";
+import { AuraAssistantPanel } from "@/components/aura-assistant-panel";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -135,6 +136,10 @@ function DashboardPage() {
         title={`Welcome, ${profile?.full_name?.split(" ")[0] ?? "there"}`}
         subtitle={`${hospital.name} · ${role ?? "member"} view`}
       />
+
+      <div className="mb-6">
+        <AuraAssistantPanel />
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <Stat label="Patients" value={stats.patients} icon="personal_injury" />
