@@ -21,6 +21,7 @@ import { Route as AuthenticatedQueueRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedPatientsRouteImport } from './routes/_authenticated/patients'
 import { Route as AuthenticatedDepartmentsRouteImport } from './routes/_authenticated/departments'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedAppointmentsRouteImport } from './routes/_authenticated/appointments'
 import { Route as AuthenticatedPatientsIdRouteImport } from './routes/_authenticated/patients.$id'
 import { Route as AuthenticatedConsultationIdRouteImport } from './routes/_authenticated/consultation.$id'
@@ -85,6 +86,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAppointmentsRoute =
   AuthenticatedAppointmentsRouteImport.update({
     id: '/appointments',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/product': typeof ProductRoute
   '/appointments': typeof AuthenticatedAppointmentsRoute
+  '/chat': typeof AuthenticatedChatRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
   '/patients': typeof AuthenticatedPatientsRouteWithChildren
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/product': typeof ProductRoute
   '/appointments': typeof AuthenticatedAppointmentsRoute
+  '/chat': typeof AuthenticatedChatRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
   '/patients': typeof AuthenticatedPatientsRouteWithChildren
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/product': typeof ProductRoute
   '/_authenticated/appointments': typeof AuthenticatedAppointmentsRoute
+  '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/departments': typeof AuthenticatedDepartmentsRoute
   '/_authenticated/patients': typeof AuthenticatedPatientsRouteWithChildren
@@ -162,6 +171,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/product'
     | '/appointments'
+    | '/chat'
     | '/dashboard'
     | '/departments'
     | '/patients'
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/product'
     | '/appointments'
+    | '/chat'
     | '/dashboard'
     | '/departments'
     | '/patients'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/product'
     | '/_authenticated/appointments'
+    | '/_authenticated/chat'
     | '/_authenticated/dashboard'
     | '/_authenticated/departments'
     | '/_authenticated/patients'
@@ -300,6 +312,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/chat': {
+      id: '/_authenticated/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AuthenticatedChatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/appointments': {
       id: '/_authenticated/appointments'
       path: '/appointments'
@@ -339,6 +358,7 @@ const AuthenticatedPatientsRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppointmentsRoute: typeof AuthenticatedAppointmentsRoute
+  AuthenticatedChatRoute: typeof AuthenticatedChatRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDepartmentsRoute: typeof AuthenticatedDepartmentsRoute
   AuthenticatedPatientsRoute: typeof AuthenticatedPatientsRouteWithChildren
@@ -350,6 +370,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppointmentsRoute: AuthenticatedAppointmentsRoute,
+  AuthenticatedChatRoute: AuthenticatedChatRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDepartmentsRoute: AuthenticatedDepartmentsRoute,
   AuthenticatedPatientsRoute: AuthenticatedPatientsRouteWithChildren,
