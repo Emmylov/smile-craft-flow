@@ -81,11 +81,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Kairos — Digital infrastructure for human-centered healthcare" },
       { name: "description", content: "Kairos connects people, data, and systems so healthcare professionals can focus on caring for people." },
       { name: "author", content: "Kairos" },
-      { property: "og:title", content: "Kairos — Human-centered healthcare infrastructure" },
-      { property: "og:description", content: "Connect every part of healthcare with Kairos — care, coordination, and intelligence in one platform." },
+      { property: "og:title", content: "Kairos — Digital infrastructure for human-centered healthcare" },
+      { property: "og:description", content: "Kairos connects people, data, and systems so healthcare professionals can focus on caring for people." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Kairos — Digital infrastructure for human-centered healthcare" },
+      { name: "twitter:description", content: "Kairos connects people, data, and systems so healthcare professionals can focus on caring for people." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e09cc995-76fb-4f1e-ba39-597f5708e91b/id-preview-8d0651d2--e51fe73d-a631-45a9-9442-d73299832e52.lovable.app-1783086068620.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e09cc995-76fb-4f1e-ba39-597f5708e91b/id-preview-8d0651d2--e51fe73d-a631-45a9-9442-d73299832e52.lovable.app-1783086068620.png" },
     ],
     links: [
       {
