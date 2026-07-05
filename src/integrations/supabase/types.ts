@@ -82,6 +82,183 @@ export type Database = {
           },
         ]
       }
+      aura_interactions: {
+        Row: {
+          action: string
+          created_at: string
+          hospital_id: string
+          id: string
+          input_summary: string | null
+          output_summary: string | null
+          page_path: string | null
+          patient_id: string | null
+          status: string
+          thread_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action?: string
+          created_at?: string
+          hospital_id: string
+          id?: string
+          input_summary?: string | null
+          output_summary?: string | null
+          page_path?: string | null
+          patient_id?: string | null
+          status?: string
+          thread_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          hospital_id?: string
+          id?: string
+          input_summary?: string | null
+          output_summary?: string | null
+          page_path?: string | null
+          patient_id?: string | null
+          status?: string
+          thread_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aura_interactions_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aura_interactions_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aura_interactions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aura_interactions_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "aura_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aura_messages: {
+        Row: {
+          context: Json
+          created_at: string
+          hospital_id: string
+          id: string
+          parts: Json
+          role: string
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          context?: Json
+          created_at?: string
+          hospital_id: string
+          id?: string
+          parts?: Json
+          role: string
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          context?: Json
+          created_at?: string
+          hospital_id?: string
+          id?: string
+          parts?: Json
+          role?: string
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aura_messages_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aura_messages_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aura_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "aura_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aura_threads: {
+        Row: {
+          archived: boolean
+          created_at: string
+          hospital_id: string
+          id: string
+          last_message_at: string
+          pinned: boolean
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          created_at?: string
+          hospital_id: string
+          id?: string
+          last_message_at?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          created_at?: string
+          hospital_id?: string
+          id?: string
+          last_message_at?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aura_threads_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aura_threads_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_conversations: {
         Row: {
           created_at: string
@@ -183,16 +360,25 @@ export type Database = {
         Row: {
           conversation_id: string
           joined_at: string
+          last_read_at: string | null
+          last_seen_at: string | null
+          typing_until: string | null
           user_id: string
         }
         Insert: {
           conversation_id: string
           joined_at?: string
+          last_read_at?: string | null
+          last_seen_at?: string | null
+          typing_until?: string | null
           user_id: string
         }
         Update: {
           conversation_id?: string
           joined_at?: string
+          last_read_at?: string | null
+          last_seen_at?: string | null
+          typing_until?: string | null
           user_id?: string
         }
         Relationships: [
