@@ -9,6 +9,13 @@ export const Route = createFileRoute("/_authenticated/consultation/$id")({
   component: ConsultationPage,
 });
 
+const RX_STATUS: Record<string, string> = {
+  pending: "bg-slate-100 text-slate-700",
+  preparing: "bg-amber-100 text-amber-700",
+  ready: "bg-blue-100 text-blue-700",
+  collected: "bg-emerald-100 text-emerald-700",
+};
+
 function ConsultationPage() {
   const { id } = useParams({ from: "/_authenticated/consultation/$id" });
   const { hospital, userId } = useKairos();
@@ -20,7 +27,9 @@ function ConsultationPage() {
   const [consultation, setConsultation] = useState({ complaint: "", diagnosis: "", notes: "" });
   const [rx, setRx] = useState({ medication: "", dosage: "", instructions: "" });
   const [lab, setLab] = useState({ test_name: "" });
-  const [saved, setSaved] = useState<{ prescriptions: any[]; labs: any[] }>({ prescriptions: [], labs: [] });
+  const [ref, setRef] = useState({ target_department_id: "", target_specialist: "", reason: "", notes: "" });
+  const [saved, setSaved] = useState<{ prescriptions: any[]; labs: any[]; referrals: any[] }>({ prescriptions: [], labs: [], referrals: [] });
+  const [departments, setDepartments] = useState<any[]>([]);
   const [consultationId, setConsultationId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -30,6 +39,8 @@ function ConsultationPage() {
       const { data: e } = await supabase.from("queue_entries").select("*, patients(*)").eq("id", id).maybeSingle();
       setEntry(e);
       setPatient(e?.patients);
+      const { data: deps } = await supabase.from("departments").select("*").eq("hospital_id", hospital.id);
+      setDepartments(deps ?? []);
       if (e?.patient_id) {
         const [{ data: v }, { data: h }] = await Promise.all([
           supabase.from("vitals").select("*").eq("patient_id", e.patient_id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
@@ -45,6 +56,20 @@ function ConsultationPage() {
   const saveConsultation = async () => {
     if (!hospital?.id || !patient) return;
     setSaving(true);
+    if (consultationId) {
+      const { error } = await supabase
+        .from("consultations")
+        .update({
+          complaint: consultation.complaint || null,
+          diagnosis: consultation.diagnosis || null,
+          notes: consultation.notes || null,
+        })
+        .eq("id", consultationId);
+      setSaving(false);
+      if (error) return toast.error(error.message);
+      toast.success("Consultation updated");
+      return;
+    }
     const { data, error } = await supabase
       .from("consultations")
       .insert({
@@ -75,18 +100,19 @@ function ConsultationPage() {
         medication: rx.medication,
         dosage: rx.dosage,
         instructions: rx.instructions,
+        status: "pending",
       })
       .select()
       .single();
     if (error) return toast.error(error.message);
-    setSaved({ ...saved, prescriptions: [...saved.prescriptions, data] });
+    setSaved((s) => ({ ...s, prescriptions: [...s.prescriptions, data] }));
     setRx({ medication: "", dosage: "", instructions: "" });
     await supabase.from("notifications").insert({
       hospital_id: hospital.id,
       type: "new_prescription",
       message: `New prescription for ${patient.full_name}: ${rx.medication}`,
     });
-    toast.success("Prescription added");
+    toast.success("Sent to pharmacy");
   };
 
   const addLab = async () => {
@@ -99,13 +125,46 @@ function ConsultationPage() {
         ordered_by: userId || null,
         consultation_id: consultationId,
         test_name: lab.test_name,
+        status: "ordered",
       })
       .select()
       .single();
     if (error) return toast.error(error.message);
-    setSaved({ ...saved, labs: [...saved.labs, data] });
+    setSaved((s) => ({ ...s, labs: [...s.labs, data] }));
     setLab({ test_name: "" });
+    await supabase.from("notifications").insert({
+      hospital_id: hospital.id,
+      type: "new_lab_order",
+      message: `Lab test ordered for ${patient.full_name}: ${lab.test_name}`,
+    });
     toast.success("Lab order created");
+  };
+
+  const addReferral = async () => {
+    if (!hospital?.id || !patient || (!ref.target_department_id && !ref.target_specialist)) return;
+    const { data, error } = await supabase
+      .from("referrals")
+      .insert({
+        hospital_id: hospital.id,
+        patient_id: patient.id,
+        referred_by: userId || null,
+        target_department_id: ref.target_department_id || null,
+        target_specialist: ref.target_specialist || null,
+        reason: ref.reason || null,
+        notes: ref.notes || null,
+        status: "pending",
+      })
+      .select("*, departments(name)")
+      .single();
+    if (error) return toast.error(error.message);
+    setSaved((s) => ({ ...s, referrals: [...s.referrals, data] }));
+    setRef({ target_department_id: "", target_specialist: "", reason: "", notes: "" });
+    await supabase.from("notifications").insert({
+      hospital_id: hospital.id,
+      type: "new_referral",
+      message: `Referral sent for ${patient.full_name} → ${data.departments?.name ?? data.target_specialist}`,
+    });
+    toast.success("Referral sent");
   };
 
   const complete = async () => {
@@ -152,7 +211,7 @@ function ConsultationPage() {
                 <textarea value={consultation.notes} onChange={(e) => setConsultation({ ...consultation, notes: e.target.value })} rows={5} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" />
               </div>
               <button onClick={saveConsultation} disabled={saving} className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-5 py-2 rounded-lg disabled:opacity-50">
-                {consultationId ? "Update consultation" : (saving ? "Saving…" : "Save consultation")}
+                {saving ? "Saving…" : consultationId ? "Update consultation" : "Save consultation"}
               </button>
             </div>
           </div>
@@ -164,13 +223,13 @@ function ConsultationPage() {
               <input placeholder="Dosage" value={rx.dosage} onChange={(e) => setRx({ ...rx, dosage: e.target.value })} className="border border-slate-200 rounded-lg px-3 py-2 text-sm" />
               <input placeholder="Instructions" value={rx.instructions} onChange={(e) => setRx({ ...rx, instructions: e.target.value })} className="border border-slate-200 rounded-lg px-3 py-2 text-sm" />
             </div>
-            <button onClick={addRx} className="mt-3 bg-blue-500 hover:bg-blue-400 text-white text-sm font-semibold px-4 py-2 rounded-lg">Add prescription</button>
+            <button onClick={addRx} className="mt-3 bg-blue-500 hover:bg-blue-400 text-white text-sm font-semibold px-4 py-2 rounded-lg">Send to pharmacy</button>
             {saved.prescriptions.length > 0 && (
               <div className="mt-4 space-y-1 text-sm">
                 {saved.prescriptions.map((p) => (
-                  <div key={p.id} className="flex justify-between border-b border-slate-100 py-1">
-                    <span>{p.medication} · {p.dosage}</span>
-                    <span className="text-xs text-slate-500">{p.instructions}</span>
+                  <div key={p.id} className="flex justify-between items-center border-b border-slate-100 py-1.5">
+                    <span>{p.medication} · <span className="text-slate-500">{p.dosage}</span></span>
+                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${RX_STATUS[p.status] ?? RX_STATUS.pending}`}>{p.status}</span>
                   </div>
                 ))}
               </div>
@@ -186,9 +245,53 @@ function ConsultationPage() {
             {saved.labs.length > 0 && (
               <div className="mt-3 space-y-1 text-sm">
                 {saved.labs.map((l) => (
-                  <div key={l.id} className="flex justify-between border-b border-slate-100 py-1">
+                  <div key={l.id} className="flex justify-between border-b border-slate-100 py-1.5">
                     <span>{l.test_name}</span>
-                    <span className="text-xs text-slate-500">{l.status}</span>
+                    <span className="text-xs text-slate-500">{l.status.replace(/_/g, " ")}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 p-5">
+            <h3 className="font-semibold mb-3">Refer to specialist</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={ref.target_department_id}
+                onChange={(e) => setRef({ ...ref, target_department_id: e.target.value })}
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm"
+              >
+                <option value="">Select department…</option>
+                {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+              <input
+                placeholder="Or specialist name"
+                value={ref.target_specialist}
+                onChange={(e) => setRef({ ...ref, target_specialist: e.target.value })}
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
+            <input
+              placeholder="Reason"
+              value={ref.reason}
+              onChange={(e) => setRef({ ...ref, reason: e.target.value })}
+              className="w-full mt-2 border border-slate-200 rounded-lg px-3 py-2 text-sm"
+            />
+            <textarea
+              placeholder="Clinical notes for the receiving team"
+              rows={2}
+              value={ref.notes}
+              onChange={(e) => setRef({ ...ref, notes: e.target.value })}
+              className="w-full mt-2 border border-slate-200 rounded-lg px-3 py-2 text-sm"
+            />
+            <button onClick={addReferral} className="mt-2 bg-violet-500 hover:bg-violet-400 text-white text-sm font-semibold px-4 py-2 rounded-lg">Send referral</button>
+            {saved.referrals.length > 0 && (
+              <div className="mt-3 space-y-1 text-sm">
+                {saved.referrals.map((r) => (
+                  <div key={r.id} className="flex justify-between border-b border-slate-100 py-1.5">
+                    <span>→ {r.departments?.name ?? r.target_specialist}</span>
+                    <span className="text-xs text-slate-500">{r.status}</span>
                   </div>
                 ))}
               </div>
