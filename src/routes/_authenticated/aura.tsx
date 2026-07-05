@@ -24,7 +24,7 @@ function AuraStarter() {
     let cancelled = false;
     const boot = async () => {
       try {
-        const threads = await listThreads();
+        const threads = (await listThreads()) as { id: string }[];
         const thread = threads[0] ?? (await createThread({ data: { title: "Aura workspace" } }));
         if (!cancelled) navigate({ to: "/aura/$threadId", params: { threadId: thread.id }, replace: true });
       } finally {

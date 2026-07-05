@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/aura/$threadId")({
 });
 
 type ThreadRow = { id: string; title: string; pinned: boolean; last_message_at: string };
-type AuraThreadResult = { thread: { title: string }; messages: UIMessage[] };
+type AuraThreadResult = { thread: { title: string }; messages: Array<{ id: string; role: "system" | "user" | "assistant"; parts: { type: "text"; text: string }[] }> };
 
 function AuraThreadPage() {
   const { threadId } = useParams({ from: "/_authenticated/aura/$threadId" });
@@ -75,8 +75,8 @@ function AuraChatWorkspace({ threadId }: { threadId: string }) {
         if (cancelled) return;
         const threadData = threadDataRaw as AuraThreadResult;
         setThreadTitle(threadData.thread.title);
-        setInitialMessages(threadData.messages);
-        setMessages(threadData.messages);
+        setInitialMessages(threadData.messages as UIMessage[]);
+        setMessages(threadData.messages as UIMessage[]);
         setThreads(threadList as ThreadRow[]);
         setReady(true);
         focusComposer();
