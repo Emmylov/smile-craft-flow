@@ -18,9 +18,14 @@ export const Route = createFileRoute("/_authenticated/staff")({
 function StaffPage() {
   const { hospital, role } = useKairos();
   const create = useServerFn(createStaffUser);
+  const invite = useServerFn(createStaffInvitation);
+  const revoke = useServerFn(revokeStaffInvitation);
+  const [tab, setTab] = useState<"members" | "invites">("members");
   const [staff, setStaff] = useState<any[]>([]);
+  const [invitations, setInvitations] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [showNew, setShowNew] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     fullName: "",
@@ -29,7 +34,14 @@ function StaffPage() {
     role: "doctor" as "doctor" | "nurse" | "reception" | "admin",
     departmentId: "",
   });
+  const [inviteForm, setInviteForm] = useState({
+    fullName: "",
+    email: "",
+    role: "doctor" as "doctor" | "nurse" | "reception" | "admin",
+    departmentId: "",
+  });
   const [lastCreated, setLastCreated] = useState<{ email: string; password: string } | null>(null);
+  const [lastInviteLink, setLastInviteLink] = useState<string | null>(null);
 
   const load = async () => {
     if (!hospital?.id) return;
