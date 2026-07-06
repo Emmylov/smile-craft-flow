@@ -4,7 +4,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useKairos } from "@/hooks/use-kairos";
 import { PageHeader } from "@/components/app-shell";
-import { createStaffUser } from "@/lib/kairos.functions";
+import {
+  createStaffUser,
+  createStaffInvitation,
+  revokeStaffInvitation,
+} from "@/lib/kairos.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/staff")({
