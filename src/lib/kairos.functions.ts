@@ -156,3 +156,93 @@ export const createStaffUser = createServerFn({ method: "POST" })
 
     return { userId: newUserId, email: data.email };
   });
+
+// ============================================================
+// Enterprise staff invitations (email + secure link + expiry)
+// ============================================================
+
+export const createStaffInvitation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (data: {
+      email: string;
+      fullName?: string;
+      role: "doctor" | "nurse" | "reception" | "admin";
+      departmentId?: string | null;
+    }) => data,
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Only administrators can invite staff.");
+
+    const { data: myProfile } = await supabase
+      .from("profiles")
+      .select("hospital_id")
+      .eq("user_id", userId)
+      .single();
+    if (!myProfile?.hospital_id) throw new Error("No hospital context.");
+
+    const email = data.email.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      throw new Error("Please provide a valid email address.");
+    }
+
+    const { data: inv, error } = await supabase
+      .from("staff_invitations")
+      .insert({
+        hospital_id: myProfile.hospital_id,
+        email,
+        full_name: data.fullName ?? null,
+        role: data.role,
+        department_id: data.departmentId ?? null,
+        invited_by: userId,
+      })
+      .select("id, token, email, role, expires_at")
+      .single();
+    if (error || !inv) throw new Error(error?.message ?? "Failed to create invitation");
+
+    return {
+      id: inv.id,
+      token: inv.token,
+      email: inv.email,
+      role: inv.role,
+      expiresAt: inv.expires_at,
+    };
+  });
+
+export const revokeStaffInvitation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { invitationId: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Only administrators can revoke invitations.");
+    const { error } = await supabase
+      .from("staff_invitations")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("id", data.invitationId)
+      .is("accepted_at", null);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const acceptStaffInvitation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { token: string; fullName?: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: result, error } = await supabase.rpc("accept_invitation", {
+      _token: data.token,
+      _full_name: data.fullName ?? null,
+    });
+    if (error) throw new Error(error.message);
+    const row = Array.isArray(result) ? result[0] : result;
+    return { hospitalId: row?.hospital_id, hospitalName: row?.hospital_name };
+  });
