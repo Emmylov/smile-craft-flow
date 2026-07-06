@@ -45,15 +45,21 @@ function StaffPage() {
 
   const load = async () => {
     if (!hospital?.id) return;
-    const [{ data: p }, { data: r }, { data: d }] = await Promise.all([
+    const [{ data: p }, { data: r }, { data: d }, { data: inv }] = await Promise.all([
       supabase.from("profiles").select("*, departments(name)").eq("hospital_id", hospital.id),
       supabase.from("user_roles").select("*").eq("hospital_id", hospital.id),
       supabase.from("departments").select("*").eq("hospital_id", hospital.id),
+      supabase
+        .from("staff_invitations")
+        .select("*, departments(name)")
+        .eq("hospital_id", hospital.id)
+        .order("created_at", { ascending: false }),
     ]);
     const roleMap = new Map<string, string>();
     (r ?? []).forEach((row: any) => roleMap.set(row.user_id, row.role));
     setStaff((p ?? []).map((profile: any) => ({ ...profile, role: roleMap.get(profile.user_id) ?? "—" })));
     setDepartments(d ?? []);
+    setInvitations(inv ?? []);
   };
 
   useEffect(() => { load(); }, [hospital?.id]);
@@ -72,6 +78,58 @@ function StaffPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const submitInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await invite({
+        data: {
+          email: inviteForm.email,
+          fullName: inviteForm.fullName || undefined,
+          role: inviteForm.role,
+          departmentId: inviteForm.departmentId || null,
+        },
+      });
+      const link = `${window.location.origin}/invite/${res.token}`;
+      setLastInviteLink(link);
+      toast.success("Invitation created");
+      setInviteForm({ fullName: "", email: "", role: "doctor", departmentId: "" });
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const doRevoke = async (id: string) => {
+    if (!confirm("Revoke this invitation? The link will stop working immediately.")) return;
+    try {
+      await revoke({ data: { invitationId: id } });
+      toast.success("Invitation revoked");
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed");
+    }
+  };
+
+  const copyLink = async (token: string) => {
+    const link = `${window.location.origin}/invite/${token}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success("Invitation link copied");
+    } catch {
+      prompt("Copy this invitation link:", link);
+    }
+  };
+
+  const invStatus = (i: any): { label: string; className: string } => {
+    if (i.revoked_at) return { label: "revoked", className: "bg-slate-100 text-slate-500" };
+    if (i.accepted_at) return { label: "accepted", className: "bg-green-100 text-green-700" };
+    if (new Date(i.expires_at) < new Date()) return { label: "expired", className: "bg-amber-100 text-amber-700" };
+    return { label: "pending", className: "bg-blue-100 text-blue-700" };
   };
 
   if (role !== "admin") {
