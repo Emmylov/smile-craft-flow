@@ -40,7 +40,7 @@ function InvitePage() {
     (async () => {
       const { data, error } = await supabase.rpc("verify_invitation", { _token: token });
       if (error) toast.error(error.message);
-      const row = Array.isArray(data) ? (data[0] as InvitationDetails | undefined) : (data as InvitationDetails | undefined);
+      const row = Array.isArray(data) ? (data[0] as InvitationDetails | undefined) : ((data as unknown) as InvitationDetails | undefined);
       setDetails(row ?? null);
       if (row?.full_name) setFullName(row.full_name);
       const { data: userData } = await supabase.auth.getUser();
