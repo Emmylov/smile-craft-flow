@@ -240,7 +240,7 @@ export const acceptStaffInvitation = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data: result, error } = await supabase.rpc("accept_invitation", {
       _token: data.token,
-      _full_name: data.fullName ?? null,
+      _full_name: data.fullName ?? "",
     });
     if (error) throw new Error(error.message);
     const row = Array.isArray(result) ? result[0] : result;
