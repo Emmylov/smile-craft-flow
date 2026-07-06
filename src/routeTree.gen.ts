@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedQueueRouteImport } from './routes/_authenticated/queue'
@@ -59,6 +60,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/queue': typeof AuthenticatedQueueRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/aura/$threadId': typeof AuthenticatedAuraThreadIdRoute
   '/consultation/$id': typeof AuthenticatedConsultationIdRoute
   '/patients/$id': typeof AuthenticatedPatientsIdRoute
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/queue': typeof AuthenticatedQueueRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/aura/$threadId': typeof AuthenticatedAuraThreadIdRoute
   '/consultation/$id': typeof AuthenticatedConsultationIdRoute
   '/patients/$id': typeof AuthenticatedPatientsIdRoute
@@ -211,6 +219,7 @@ export interface FileRoutesById {
   '/_authenticated/queue': typeof AuthenticatedQueueRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/_authenticated/aura/$threadId': typeof AuthenticatedAuraThreadIdRoute
   '/_authenticated/consultation/$id': typeof AuthenticatedConsultationIdRoute
   '/_authenticated/patients/$id': typeof AuthenticatedPatientsIdRoute
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/queue'
     | '/settings'
     | '/staff'
+    | '/invite/$token'
     | '/aura/$threadId'
     | '/consultation/$id'
     | '/patients/$id'
@@ -259,6 +269,7 @@ export interface FileRouteTypes {
     | '/queue'
     | '/settings'
     | '/staff'
+    | '/invite/$token'
     | '/aura/$threadId'
     | '/consultation/$id'
     | '/patients/$id'
@@ -283,6 +294,7 @@ export interface FileRouteTypes {
     | '/_authenticated/queue'
     | '/_authenticated/settings'
     | '/_authenticated/staff'
+    | '/invite/$token'
     | '/_authenticated/aura/$threadId'
     | '/_authenticated/consultation/$id'
     | '/_authenticated/patients/$id'
@@ -297,6 +309,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   ProductRoute: typeof ProductRoute
+  InviteTokenRoute: typeof InviteTokenRoute
   ApiAuraChatRoute: typeof ApiAuraChatRoute
   ApiAuraDictateRoute: typeof ApiAuraDictateRoute
 }
@@ -343,6 +356,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/staff': {
@@ -524,19 +544,10 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   ProductRoute: ProductRoute,
+  InviteTokenRoute: InviteTokenRoute,
   ApiAuraChatRoute: ApiAuraChatRoute,
   ApiAuraDictateRoute: ApiAuraDictateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -1018,6 +1018,79 @@ export type Database = {
           },
         ]
       }
+      staff_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          department_id: string | null
+          email: string
+          expires_at: string
+          full_name: string | null
+          hospital_id: string
+          id: string
+          invited_by: string
+          revoked_at: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          department_id?: string | null
+          email: string
+          expires_at?: string
+          full_name?: string | null
+          hospital_id: string
+          id?: string
+          invited_by: string
+          revoked_at?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          department_id?: string | null
+          email?: string
+          expires_at?: string
+          full_name?: string | null
+          hospital_id?: string
+          id?: string
+          invited_by?: string
+          revoked_at?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_invitations_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_invitations_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_invitations_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1164,6 +1237,13 @@ export type Database = {
       }
     }
     Functions: {
+      accept_invitation: {
+        Args: { _full_name: string; _token: string }
+        Returns: {
+          hospital_id: string
+          hospital_name: string
+        }[]
+      }
       get_my_hospital_id: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -1175,6 +1255,20 @@ export type Database = {
       is_conversation_participant: {
         Args: { _conv_id: string; _user_id: string }
         Returns: boolean
+      }
+      verify_invitation: {
+        Args: { _token: string }
+        Returns: {
+          department_name: string
+          email: string
+          expires_at: string
+          full_name: string
+          hospital_id: string
+          hospital_name: string
+          invitation_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+        }[]
       }
       verify_workspace: {
         Args: { _workspace_id: string }
