@@ -199,7 +199,7 @@ function StaffPage() {
       />
 
       <div className="flex gap-1 mb-4 border-b border-slate-200">
-        {(["members", "invites"] as const).map((t) => (
+        {(["members", "invites", "activity"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -207,7 +207,7 @@ function StaffPage() {
               tab === t ? "border-blue-500 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
           >
-            {t === "members" ? "Team members" : `Invitations (${invitations.length})`}
+            {t === "members" ? "Team members" : t === "invites" ? `Invitations (${invitations.length})` : `Activity log (${events.length})`}
           </button>
         ))}
       </div>
