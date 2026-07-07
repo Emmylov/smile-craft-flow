@@ -462,3 +462,13 @@ function F({ label, value, onChange, type = "text", required }: { label: string;
     </div>
   );
 }
+
+function eventMeta(event: string): { label: string; icon: string; bg: string; text: string } {
+  switch (event) {
+    case "created": return { label: "Invitation sent", icon: "✉", bg: "bg-blue-100", text: "text-blue-700" };
+    case "resent": return { label: "Invitation resent", icon: "🔄", bg: "bg-indigo-100", text: "text-indigo-700" };
+    case "accepted": return { label: "Invitation accepted", icon: "✓", bg: "bg-green-100", text: "text-green-700" };
+    case "revoked": return { label: "Invitation revoked", icon: "⨯", bg: "bg-red-100", text: "text-red-700" };
+    default: return { label: event, icon: "•", bg: "bg-slate-100", text: "text-slate-700" };
+  }
+}
