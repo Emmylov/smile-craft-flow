@@ -274,19 +274,74 @@ function StaffPage() {
                         <span className={`text-[11px] px-2 py-0.5 rounded-full ${st.className}`}>{st.label}</span>
                       </td>
                       <td className="px-4 py-3 text-slate-500">{new Date(i.expires_at).toLocaleDateString()}</td>
-                      <td className="px-4 py-3 text-right space-x-3">
-                        {active && (
-                          <>
-                            <button onClick={() => copyLink(i.token)} className="text-blue-600 hover:underline text-xs font-medium">Copy link</button>
-                            <button onClick={() => doRevoke(i.id)} className="text-red-600 hover:underline text-xs font-medium">Revoke</button>
-                          </>
-                        )}
+                      <td className="px-4 py-3 text-right">
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            onClick={() => copyLink(i.token)}
+                            disabled={busyId === i.id}
+                            title="Copy invitation link"
+                            className="text-xs font-medium px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-50"
+                          >
+                            📋 Copy link
+                          </button>
+                          {!i.accepted_at && (
+                            <button
+                              onClick={() => doResend(i.id)}
+                              disabled={busyId === i.id}
+                              title="Revoke this link and issue a fresh one"
+                              className="text-xs font-medium px-2 py-1 rounded border border-blue-200 text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+                            >
+                              🔄 Resend
+                            </button>
+                          )}
+                          {active && (
+                            <button
+                              onClick={() => doRevoke(i.id)}
+                              disabled={busyId === i.id}
+                              className="text-xs font-medium px-2 py-1 rounded border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50"
+                            >
+                              Revoke
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
+          )}
+        </div>
+      )}
+
+      {tab === "activity" && (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          {events.length === 0 ? (
+            <div className="p-8 text-center text-sm text-slate-500">No invitation activity yet.</div>
+          ) : (
+            <ol className="divide-y divide-slate-100">
+              {events.map((e: any) => {
+                const meta = eventMeta(e.event);
+                const actor = e.actor_id ? actors[e.actor_id] ?? "…" : "System";
+                return (
+                  <li key={e.id} className="flex items-start gap-3 px-4 py-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${meta.bg}`}>
+                      {meta.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm">
+                        <span className={`font-semibold ${meta.text}`}>{meta.label}</span>
+                        <span className="text-slate-500"> · {e.email}</span>
+                        <span className="text-slate-400"> · <span className="capitalize">{e.role}</span></span>
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        by <b className="text-slate-700">{actor}</b> · {new Date(e.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
           )}
         </div>
       )}
