@@ -8,6 +8,7 @@ import {
   createStaffUser,
   createStaffInvitation,
   revokeStaffInvitation,
+  resendStaffInvitation,
 } from "@/lib/kairos.functions";
 import { toast } from "sonner";
 
@@ -20,13 +21,17 @@ function StaffPage() {
   const create = useServerFn(createStaffUser);
   const invite = useServerFn(createStaffInvitation);
   const revoke = useServerFn(revokeStaffInvitation);
-  const [tab, setTab] = useState<"members" | "invites">("members");
+  const resend = useServerFn(resendStaffInvitation);
+  const [tab, setTab] = useState<"members" | "invites" | "activity">("members");
   const [staff, setStaff] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [actors, setActors] = useState<Record<string, string>>({});
   const [departments, setDepartments] = useState<any[]>([]);
   const [showNew, setShowNew] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -45,7 +50,7 @@ function StaffPage() {
 
   const load = async () => {
     if (!hospital?.id) return;
-    const [{ data: p }, { data: r }, { data: d }, { data: inv }] = await Promise.all([
+    const [{ data: p }, { data: r }, { data: d }, { data: inv }, { data: ev }] = await Promise.all([
       supabase.from("profiles").select("*, departments(name)").eq("hospital_id", hospital.id),
       supabase.from("user_roles").select("*").eq("hospital_id", hospital.id),
       supabase.from("departments").select("*").eq("hospital_id", hospital.id),
@@ -54,12 +59,30 @@ function StaffPage() {
         .select("*, departments(name)")
         .eq("hospital_id", hospital.id)
         .order("created_at", { ascending: false }),
+      supabase
+        .from("staff_invitation_events")
+        .select("*")
+        .eq("hospital_id", hospital.id)
+        .order("created_at", { ascending: false })
+        .limit(200),
     ]);
     const roleMap = new Map<string, string>();
     (r ?? []).forEach((row: any) => roleMap.set(row.user_id, row.role));
     setStaff((p ?? []).map((profile: any) => ({ ...profile, role: roleMap.get(profile.user_id) ?? "—" })));
     setDepartments(d ?? []);
     setInvitations(inv ?? []);
+    setEvents(ev ?? []);
+
+    const actorIds = Array.from(new Set((ev ?? []).map((e: any) => e.actor_id).filter(Boolean)));
+    if (actorIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", actorIds);
+      const map: Record<string, string> = {};
+      (profs ?? []).forEach((p: any) => { map[p.user_id] = p.full_name || p.email || "Unknown"; });
+      setActors(map);
+    }
   };
 
   useEffect(() => { load(); }, [hospital?.id]);
@@ -106,13 +129,29 @@ function StaffPage() {
 
   const doRevoke = async (id: string) => {
     if (!confirm("Revoke this invitation? The link will stop working immediately.")) return;
+    setBusyId(id);
     try {
       await revoke({ data: { invitationId: id } });
       toast.success("Invitation revoked");
       load();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
-    }
+    } finally { setBusyId(null); }
+  };
+
+  const doResend = async (id: string) => {
+    setBusyId(id);
+    try {
+      const res = await resend({ data: { invitationId: id } });
+      const link = `${window.location.origin}/invite/${res.token}`;
+      try { await navigator.clipboard.writeText(link); } catch {}
+      setLastInviteLink(link);
+      setShowInvite(true);
+      toast.success("New invitation link generated & copied");
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed");
+    } finally { setBusyId(null); }
   };
 
   const copyLink = async (token: string) => {
@@ -160,7 +199,7 @@ function StaffPage() {
       />
 
       <div className="flex gap-1 mb-4 border-b border-slate-200">
-        {(["members", "invites"] as const).map((t) => (
+        {(["members", "invites", "activity"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -168,7 +207,7 @@ function StaffPage() {
               tab === t ? "border-blue-500 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
           >
-            {t === "members" ? "Team members" : `Invitations (${invitations.length})`}
+            {t === "members" ? "Team members" : t === "invites" ? `Invitations (${invitations.length})` : `Activity log (${events.length})`}
           </button>
         ))}
       </div>
@@ -235,19 +274,74 @@ function StaffPage() {
                         <span className={`text-[11px] px-2 py-0.5 rounded-full ${st.className}`}>{st.label}</span>
                       </td>
                       <td className="px-4 py-3 text-slate-500">{new Date(i.expires_at).toLocaleDateString()}</td>
-                      <td className="px-4 py-3 text-right space-x-3">
-                        {active && (
-                          <>
-                            <button onClick={() => copyLink(i.token)} className="text-blue-600 hover:underline text-xs font-medium">Copy link</button>
-                            <button onClick={() => doRevoke(i.id)} className="text-red-600 hover:underline text-xs font-medium">Revoke</button>
-                          </>
-                        )}
+                      <td className="px-4 py-3 text-right">
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            onClick={() => copyLink(i.token)}
+                            disabled={busyId === i.id}
+                            title="Copy invitation link"
+                            className="text-xs font-medium px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-50"
+                          >
+                            📋 Copy link
+                          </button>
+                          {!i.accepted_at && (
+                            <button
+                              onClick={() => doResend(i.id)}
+                              disabled={busyId === i.id}
+                              title="Revoke this link and issue a fresh one"
+                              className="text-xs font-medium px-2 py-1 rounded border border-blue-200 text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+                            >
+                              🔄 Resend
+                            </button>
+                          )}
+                          {active && (
+                            <button
+                              onClick={() => doRevoke(i.id)}
+                              disabled={busyId === i.id}
+                              className="text-xs font-medium px-2 py-1 rounded border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50"
+                            >
+                              Revoke
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
+          )}
+        </div>
+      )}
+
+      {tab === "activity" && (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          {events.length === 0 ? (
+            <div className="p-8 text-center text-sm text-slate-500">No invitation activity yet.</div>
+          ) : (
+            <ol className="divide-y divide-slate-100">
+              {events.map((e: any) => {
+                const meta = eventMeta(e.event);
+                const actor = e.actor_id ? actors[e.actor_id] ?? "…" : "System";
+                return (
+                  <li key={e.id} className="flex items-start gap-3 px-4 py-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${meta.bg}`}>
+                      {meta.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm">
+                        <span className={`font-semibold ${meta.text}`}>{meta.label}</span>
+                        <span className="text-slate-500"> · {e.email}</span>
+                        <span className="text-slate-400"> · <span className="capitalize">{e.role}</span></span>
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        by <b className="text-slate-700">{actor}</b> · {new Date(e.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
           )}
         </div>
       )}
@@ -367,4 +461,14 @@ function F({ label, value, onChange, type = "text", required }: { label: string;
       <input type={type} required={required} value={value} onChange={(e) => onChange(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" />
     </div>
   );
+}
+
+function eventMeta(event: string): { label: string; icon: string; bg: string; text: string } {
+  switch (event) {
+    case "created": return { label: "Invitation sent", icon: "✉", bg: "bg-blue-100", text: "text-blue-700" };
+    case "resent": return { label: "Invitation resent", icon: "🔄", bg: "bg-indigo-100", text: "text-indigo-700" };
+    case "accepted": return { label: "Invitation accepted", icon: "✓", bg: "bg-green-100", text: "text-green-700" };
+    case "revoked": return { label: "Invitation revoked", icon: "⨯", bg: "bg-red-100", text: "text-red-700" };
+    default: return { label: event, icon: "•", bg: "bg-slate-100", text: "text-slate-700" };
+  }
 }

@@ -1018,6 +1018,64 @@ export type Database = {
           },
         ]
       }
+      staff_invitation_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          email: string | null
+          event: string
+          hospital_id: string
+          id: string
+          invitation_id: string
+          metadata: Json
+          role: Database["public"]["Enums"]["app_role"] | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          email?: string | null
+          event: string
+          hospital_id: string
+          id?: string
+          invitation_id: string
+          metadata?: Json
+          role?: Database["public"]["Enums"]["app_role"] | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          email?: string | null
+          event?: string
+          hospital_id?: string
+          id?: string
+          invitation_id?: string
+          metadata?: Json
+          role?: Database["public"]["Enums"]["app_role"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_invitation_events_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_invitation_events_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_invitation_events_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "staff_invitations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_invitations: {
         Row: {
           accepted_at: string | null
@@ -1255,6 +1313,16 @@ export type Database = {
       is_conversation_participant: {
         Args: { _conv_id: string; _user_id: string }
         Returns: boolean
+      }
+      resend_staff_invitation: {
+        Args: { _invitation_id: string }
+        Returns: {
+          email: string
+          expires_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          token: string
+        }[]
       }
       verify_invitation: {
         Args: { _token: string }
