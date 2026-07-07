@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useKairos, type AppRole } from "@/hooks/use-kairos";
+import { useInvitationNotifications } from "@/hooks/use-invitation-notifications";
 import kairosLogo from "@/assets/kairos-logo.png.asset.json";
 
 const Icon = ({ name, className = "" }: { name: string; className?: string }) => (
@@ -25,9 +26,15 @@ const NAV: NavItem[] = [
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { hospital, profile, role, email, loading } = useKairos();
+  const { hospital, profile, role, email, loading, userId } = useKairos();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useInvitationNotifications({
+    hospitalId: hospital?.id ?? null,
+    isAdmin: role === "admin",
+    currentUserId: userId,
+  });
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
