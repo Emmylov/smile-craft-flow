@@ -233,6 +233,26 @@ export const revokeStaffInvitation = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const resendStaffInvitation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { invitationId: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: result, error } = await supabase.rpc("resend_staff_invitation", {
+      _invitation_id: data.invitationId,
+    });
+    if (error) throw new Error(error.message);
+    const row = Array.isArray(result) ? result[0] : result;
+    if (!row) throw new Error("Failed to resend invitation");
+    return {
+      id: row.id as string,
+      token: row.token as string,
+      email: row.email as string,
+      role: row.role as string,
+      expiresAt: row.expires_at as string,
+    };
+  });
+
 export const acceptStaffInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { token: string; fullName?: string }) => data)
