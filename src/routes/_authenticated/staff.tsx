@@ -21,13 +21,17 @@ function StaffPage() {
   const create = useServerFn(createStaffUser);
   const invite = useServerFn(createStaffInvitation);
   const revoke = useServerFn(revokeStaffInvitation);
-  const [tab, setTab] = useState<"members" | "invites">("members");
+  const resend = useServerFn(resendStaffInvitation);
+  const [tab, setTab] = useState<"members" | "invites" | "activity">("members");
   const [staff, setStaff] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [actors, setActors] = useState<Record<string, string>>({});
   const [departments, setDepartments] = useState<any[]>([]);
   const [showNew, setShowNew] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -46,7 +50,7 @@ function StaffPage() {
 
   const load = async () => {
     if (!hospital?.id) return;
-    const [{ data: p }, { data: r }, { data: d }, { data: inv }] = await Promise.all([
+    const [{ data: p }, { data: r }, { data: d }, { data: inv }, { data: ev }] = await Promise.all([
       supabase.from("profiles").select("*, departments(name)").eq("hospital_id", hospital.id),
       supabase.from("user_roles").select("*").eq("hospital_id", hospital.id),
       supabase.from("departments").select("*").eq("hospital_id", hospital.id),
@@ -55,12 +59,30 @@ function StaffPage() {
         .select("*, departments(name)")
         .eq("hospital_id", hospital.id)
         .order("created_at", { ascending: false }),
+      supabase
+        .from("staff_invitation_events")
+        .select("*")
+        .eq("hospital_id", hospital.id)
+        .order("created_at", { ascending: false })
+        .limit(200),
     ]);
     const roleMap = new Map<string, string>();
     (r ?? []).forEach((row: any) => roleMap.set(row.user_id, row.role));
     setStaff((p ?? []).map((profile: any) => ({ ...profile, role: roleMap.get(profile.user_id) ?? "—" })));
     setDepartments(d ?? []);
     setInvitations(inv ?? []);
+    setEvents(ev ?? []);
+
+    const actorIds = Array.from(new Set((ev ?? []).map((e: any) => e.actor_id).filter(Boolean)));
+    if (actorIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", actorIds);
+      const map: Record<string, string> = {};
+      (profs ?? []).forEach((p: any) => { map[p.user_id] = p.full_name || p.email || "Unknown"; });
+      setActors(map);
+    }
   };
 
   useEffect(() => { load(); }, [hospital?.id]);
