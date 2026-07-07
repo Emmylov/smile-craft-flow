@@ -26,9 +26,15 @@ const NAV: NavItem[] = [
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { hospital, profile, role, email, loading } = useKairos();
+  const { hospital, profile, role, email, loading, userId } = useKairos();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useInvitationNotifications({
+    hospitalId: hospital?.id ?? null,
+    isAdmin: role === "admin",
+    currentUserId: userId,
+  });
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
