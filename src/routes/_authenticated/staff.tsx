@@ -129,13 +129,29 @@ function StaffPage() {
 
   const doRevoke = async (id: string) => {
     if (!confirm("Revoke this invitation? The link will stop working immediately.")) return;
+    setBusyId(id);
     try {
       await revoke({ data: { invitationId: id } });
       toast.success("Invitation revoked");
       load();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
-    }
+    } finally { setBusyId(null); }
+  };
+
+  const doResend = async (id: string) => {
+    setBusyId(id);
+    try {
+      const res = await resend({ data: { invitationId: id } });
+      const link = `${window.location.origin}/invite/${res.token}`;
+      try { await navigator.clipboard.writeText(link); } catch {}
+      setLastInviteLink(link);
+      setShowInvite(true);
+      toast.success("New invitation link generated & copied");
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed");
+    } finally { setBusyId(null); }
   };
 
   const copyLink = async (token: string) => {
