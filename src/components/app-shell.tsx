@@ -36,6 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     isAdmin: role === "admin",
     currentUserId: userId,
   });
+  useMentionNotifications(userId);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
