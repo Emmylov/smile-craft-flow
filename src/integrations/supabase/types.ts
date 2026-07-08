@@ -315,24 +315,39 @@ export type Database = {
           body: string
           conversation_id: string
           created_at: string
+          edited_at: string | null
           hospital_id: string
           id: string
+          mentions: string[]
+          pinned_at: string | null
+          pinned_by: string | null
+          reply_to_id: string | null
           sender_id: string
         }
         Insert: {
           body: string
           conversation_id: string
           created_at?: string
+          edited_at?: string | null
           hospital_id: string
           id?: string
+          mentions?: string[]
+          pinned_at?: string | null
+          pinned_by?: string | null
+          reply_to_id?: string | null
           sender_id: string
         }
         Update: {
           body?: string
           conversation_id?: string
           created_at?: string
+          edited_at?: string | null
           hospital_id?: string
           id?: string
+          mentions?: string[]
+          pinned_at?: string | null
+          pinned_by?: string | null
+          reply_to_id?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -355,6 +370,13 @@ export type Database = {
             columns: ["hospital_id"]
             isOneToOne: false
             referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -390,6 +412,48 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_reactions: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_reactions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -621,28 +685,37 @@ export type Database = {
       }
       notifications: {
         Row: {
+          conversation_id: string | null
           created_at: string
           hospital_id: string
           id: string
+          link: string | null
           message: string
           read: boolean
           type: string
+          user_id: string | null
         }
         Insert: {
+          conversation_id?: string | null
           created_at?: string
           hospital_id: string
           id?: string
+          link?: string | null
           message: string
           read?: boolean
           type: string
+          user_id?: string | null
         }
         Update: {
+          conversation_id?: string | null
           created_at?: string
           hospital_id?: string
           id?: string
+          link?: string | null
           message?: string
           read?: boolean
           type?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -1324,6 +1397,8 @@ export type Database = {
           token: string
         }[]
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       verify_invitation: {
         Args: { _token: string }
         Returns: {
