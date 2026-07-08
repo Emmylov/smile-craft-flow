@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useKairos, type AppRole } from "@/hooks/use-kairos";
 import { useInvitationNotifications } from "@/hooks/use-invitation-notifications";
+import { useMentionNotifications } from "@/hooks/use-mention-notifications";
 import kairosLogo from "@/assets/kairos-logo.png.asset.json";
 
 const Icon = ({ name, className = "" }: { name: string; className?: string }) => (
