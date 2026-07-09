@@ -50,9 +50,9 @@ function ContactPage() {
             </p>
             <div className="space-y-4 pt-2">
               {[
-                { icon: "mail", title: "Email us", value: "hello@kairos.health", href: "mailto:hello@kairos.health" },
-                { icon: "call", title: "Call sales", value: "+1 (415) 555-0119", href: "tel:+14155550119" },
-                { icon: "location_on", title: "HQ", value: "San Francisco · Lagos · London" },
+                { icon: "mail", title: "Email us", value: "hello@kairoscareglobal.online", href: "mailto:hello@kairoscareglobal.online" },
+                { icon: "call", title: "Call sales", value: "+2347075210013", href: "tel:+2347075210013" },
+                { icon: "location_on", title: "HQ", value: "Africa · Lagos · Nigeria" },
               ].map((c) => (
                 <div key={c.title} className="flex items-start gap-3 p-4 rounded-xl border border-outline-variant bg-white">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
