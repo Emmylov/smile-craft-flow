@@ -88,15 +88,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Kairos — Digital infrastructure for human-centered healthcare" },
       { name: "twitter:description", content: "Kairos connects people, data, and systems so healthcare professionals can focus on caring for people." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e09cc995-76fb-4f1e-ba39-597f5708e91b/id-preview-8d0651d2--e51fe73d-a631-45a9-9442-d73299832e52.lovable.app-1783086068620.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e09cc995-76fb-4f1e-ba39-597f5708e91b/id-preview-8d0651d2--e51fe73d-a631-45a9-9442-d73299832e52.lovable.app-1783086068620.png" },
+      // keep existing OG image entries intact; they point to remote previews used by the project
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      // favicon or app logo: if you upload your logo to public/logo.png it will be used here
+      { rel: "icon", href: "/logo.png", type: "image/png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" },
@@ -128,6 +128,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      {/* Simple header showing the app logo at load. */}
+      <header className="w-full py-6 flex justify-center bg-background">
+        {/* Upload your image to public/logo.png (or change the path below) */}
+        <img src="/logo.png" alt="Kairos logo" style={{ height: 56 }} />
+      </header>
+
       <Outlet />
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
