@@ -342,7 +342,7 @@ function ChatPage() {
   const filteredMessages = useMemo(() => {
     if (!search.trim()) return messages;
     const q = search.toLowerCase();
-    return messages.filter((m) => m.body.toLowerCase().includes(q));
+    return messages.filter((m) => (m.body ?? "").toLowerCase().includes(q));
   }, [messages, search]);
 
   const onInputChange = (v: string) => {
