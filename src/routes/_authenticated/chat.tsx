@@ -478,7 +478,7 @@ function ChatPage() {
                           )}
                           {replied && (
                             <div className={`mb-1 text-[11px] border-l-2 pl-2 truncate ${mine ? "border-white/50 text-blue-50" : "border-slate-300 text-slate-500"}`}>
-                              ↳ {replied.body.slice(0, 80)}
+                              ↳ {(replied.body ?? "attachment").slice(0, 80)}
                             </div>
                           )}
                           {m.body && (
