@@ -29,6 +29,8 @@ type Conversation = {
   unread: number;
 };
 
+type Attachment = { path: string; name: string; size: number; type: string };
+
 type Message = {
   id: string;
   conversation_id: string;
@@ -41,7 +43,9 @@ type Message = {
   pinned_by: string | null;
   edited_at: string | null;
   mentions: string[];
+  attachments: Attachment[];
 };
+
 
 type Reaction = { id: string; message_id: string; user_id: string; emoji: string };
 type Staff = { user_id: string; full_name: string };
@@ -60,9 +64,13 @@ function ChatPage() {
   const [search, setSearch] = useState("");
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [pickerFor, setPickerFor] = useState<string | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<Attachment[]>([]);
+  const [uploading, setUploading] = useState(false);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   const loadConversations = async () => {
     if (!userId) return;
@@ -192,9 +200,49 @@ function ChatPage() {
     }, 5000);
   };
 
+  const uploadFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !hospital?.id || !userId) return;
+    setUploading(true);
+    const uploaded: Attachment[] = [];
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > 20 * 1024 * 1024) {
+          toast.error(`${file.name} exceeds 20 MB`);
+          continue;
+        }
+        const safe = file.name.replace(/[^\w.\-]+/g, "_");
+        const path = `${hospital.id}/${activeId ?? "misc"}/${userId}/${Date.now()}-${safe}`;
+        const { error } = await supabase.storage.from("chat-attachments").upload(path, file, {
+          contentType: file.type || "application/octet-stream",
+          upsert: false,
+        });
+        if (error) {
+          toast.error(error.message);
+          continue;
+        }
+        uploaded.push({ path, name: file.name, size: file.size, type: file.type || "application/octet-stream" });
+      }
+      if (uploaded.length) setPendingFiles((p) => [...p, ...uploaded]);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const removePending = async (att: Attachment) => {
+    await supabase.storage.from("chat-attachments").remove([att.path]);
+    setPendingFiles((p) => p.filter((f) => f.path !== att.path));
+  };
+
+  const openAttachment = async (att: Attachment) => {
+    const { data, error } = await supabase.storage.from("chat-attachments").createSignedUrl(att.path, 60 * 10);
+    if (error || !data?.signedUrl) return toast.error(error?.message ?? "Could not open file");
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  };
+
   const send = async () => {
-    if (!text.trim() || !activeId || !hospital?.id || !userId || !active) return;
     const body = text.trim();
+    if ((!body && pendingFiles.length === 0) || !activeId || !hospital?.id || !userId || !active) return;
     // Parse @mentions against active participants
     const nameToId = new Map<string, string>();
     active.participants.forEach((p) => p.full_name && nameToId.set(p.full_name.toLowerCase(), p.user_id));
@@ -204,18 +252,21 @@ function ChatPage() {
       if (re.test(body) && id !== userId) mentioned.add(id);
     }
 
+    const attachmentsToSend = pendingFiles;
     setText("");
     setReplyTo(null);
     setMentionQuery(null);
+    setPendingFiles([]);
     const { data: inserted, error } = await supabase
       .from("chat_messages")
       .insert({
         conversation_id: activeId,
         sender_id: userId,
         hospital_id: hospital.id,
-        body,
+        body: body || null,
         reply_to_id: replyTo?.id ?? null,
         mentions: Array.from(mentioned),
+        attachments: attachmentsToSend,
       })
       .select()
       .single();
@@ -227,7 +278,7 @@ function ChatPage() {
         hospital_id: hospital.id,
         user_id: uid,
         type: "mention",
-        message: `${senderName} mentioned you: ${body.slice(0, 120)}`,
+        message: `${senderName} mentioned you: ${(body || "shared a file").slice(0, 120)}`,
         link: "/chat",
         conversation_id: activeId,
         read: false,
@@ -235,6 +286,7 @@ function ChatPage() {
       await supabase.from("notifications").insert(rows);
     }
   };
+
 
   const toggleReaction = async (messageId: string, emoji: string) => {
     if (!userId || !activeId) return;
@@ -290,7 +342,7 @@ function ChatPage() {
   const filteredMessages = useMemo(() => {
     if (!search.trim()) return messages;
     const q = search.toLowerCase();
-    return messages.filter((m) => m.body.toLowerCase().includes(q));
+    return messages.filter((m) => (m.body ?? "").toLowerCase().includes(q));
   }, [messages, search]);
 
   const onInputChange = (v: string) => {
@@ -426,18 +478,41 @@ function ChatPage() {
                           )}
                           {replied && (
                             <div className={`mb-1 text-[11px] border-l-2 pl-2 truncate ${mine ? "border-white/50 text-blue-50" : "border-slate-300 text-slate-500"}`}>
-                              ↳ {replied.body.slice(0, 80)}
+                              ↳ {(replied.body ?? "attachment").slice(0, 80)}
                             </div>
                           )}
-                          <div className="whitespace-pre-wrap">
-                            {m.body.split(/(@[\w\-]+(?:\s[\w\-]+)?)/g).map((chunk, i) =>
-                              chunk.startsWith("@") ? (
-                                <span key={i} className={mine ? "font-semibold underline" : "font-semibold text-blue-600"}>{chunk}</span>
-                              ) : (
-                                <span key={i}>{chunk}</span>
-                              ),
-                            )}
-                          </div>
+                          {m.body && (
+                            <div className="whitespace-pre-wrap">
+                              {m.body.split(/(@[\w\-]+(?:\s[\w\-]+)?)/g).map((chunk, i) =>
+                                chunk.startsWith("@") ? (
+                                  <span key={i} className={mine ? "font-semibold underline" : "font-semibold text-blue-600"}>{chunk}</span>
+                                ) : (
+                                  <span key={i}>{chunk}</span>
+                                ),
+                              )}
+                            </div>
+                          )}
+                          {m.attachments && m.attachments.length > 0 && (
+                            <ul className={`mt-1 space-y-1 ${m.body ? "" : ""}`} aria-label="Attachments">
+                              {m.attachments.map((a) => (
+                                <li key={a.path}>
+                                  <button
+                                    type="button"
+                                    onClick={() => openAttachment(a)}
+                                    aria-label={`Open attachment ${a.name}, ${Math.ceil(a.size / 1024)} kilobytes`}
+                                    className={`w-full flex items-center gap-2 text-left text-xs px-2 py-1.5 rounded-lg border ${mine ? "bg-blue-400/40 border-blue-300 text-white hover:bg-blue-400/60" : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"}`}
+                                  >
+                                    <span aria-hidden="true" className="material-symbols-outlined text-[16px]">
+                                      {a.type.startsWith("image/") ? "image" : a.type.startsWith("video/") ? "movie" : "description"}
+                                    </span>
+                                    <span className="truncate flex-1">{a.name}</span>
+                                    <span className={mine ? "text-blue-50" : "text-slate-400"}>{Math.ceil(a.size / 1024)} KB</span>
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+
                           <div className={`text-[10px] mt-0.5 ${mine ? "text-blue-100" : "text-slate-400"}`}>
                             {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                             {m.edited_at && " · edited"}
@@ -445,37 +520,80 @@ function ChatPage() {
                           </div>
                         </div>
                         {rxGrouped.length > 0 && (
-                          <div className={`flex gap-1 mt-1 ${mine ? "justify-end" : "justify-start"}`}>
+                          <ul role="list" aria-label="Reactions" className={`flex gap-1 mt-1 ${mine ? "justify-end" : "justify-start"}`}>
                             {rxGrouped.map(([emo, count]) => {
                               const iReacted = msgRx.some((r) => r.emoji === emo && r.user_id === userId);
                               return (
-                                <button
-                                  key={emo}
-                                  onClick={() => toggleReaction(m.id, emo)}
-                                  className={`text-[11px] px-1.5 py-0.5 rounded-full border ${iReacted ? "bg-blue-100 border-blue-300" : "bg-white border-slate-200"}`}
-                                >
-                                  {emo} {count}
-                                </button>
+                                <li key={emo}>
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleReaction(m.id, emo)}
+                                    aria-label={`${emo} reaction, ${count}, ${iReacted ? "remove yours" : "add yours"}`}
+                                    aria-pressed={iReacted}
+                                    className={`text-[11px] px-1.5 py-0.5 rounded-full border focus:outline-none focus:ring-2 focus:ring-blue-500 ${iReacted ? "bg-blue-100 border-blue-300" : "bg-white border-slate-200"}`}
+                                  >
+                                    <span aria-hidden="true">{emo} {count}</span>
+                                  </button>
+                                </li>
                               );
                             })}
-                          </div>
+                          </ul>
                         )}
-                        <div className={`absolute -top-3 ${mine ? "left-0" : "right-0"} opacity-0 group-hover:opacity-100 transition flex items-center gap-0.5 bg-white border border-slate-200 rounded-full shadow px-1 py-0.5`}>
-                          <button title="React" onClick={() => setPickerFor(pickerFor === m.id ? null : m.id)} className="w-6 h-6 rounded-full hover:bg-slate-100 text-[14px]">😊</button>
-                          <button title="Reply" onClick={() => { setReplyTo(m); inputRef.current?.focus(); }} className="w-6 h-6 rounded-full hover:bg-slate-100">
-                            <span className="material-symbols-outlined text-[14px] leading-none">reply</span>
+                        <div
+                          role="toolbar"
+                          aria-label={`Actions for message from ${active.participants.find((p) => p.user_id === m.sender_id)?.full_name ?? "you"}`}
+                          className={`absolute -top-3 ${mine ? "left-0" : "right-0"} opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition flex items-center gap-0.5 bg-white border border-slate-200 rounded-full shadow px-1 py-0.5`}
+                        >
+                          <button
+                            type="button"
+                            aria-label="Add reaction"
+                            aria-haspopup="menu"
+                            aria-expanded={pickerFor === m.id}
+                            onClick={() => setPickerFor(pickerFor === m.id ? null : m.id)}
+                            className="w-6 h-6 rounded-full hover:bg-slate-100 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <span aria-hidden="true">😊</span>
                           </button>
-                          <button title={m.pinned_at ? "Unpin" : "Pin"} onClick={() => togglePin(m)} className="w-6 h-6 rounded-full hover:bg-slate-100">
-                            <span className="material-symbols-outlined text-[14px] leading-none">{m.pinned_at ? "keep_off" : "push_pin"}</span>
+                          <button
+                            type="button"
+                            aria-label="Reply to this message"
+                            onClick={() => { setReplyTo(m); inputRef.current?.focus(); }}
+                            className="w-6 h-6 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <span aria-hidden="true" className="material-symbols-outlined text-[14px] leading-none">reply</span>
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={m.pinned_at ? "Unpin message" : "Pin message"}
+                            aria-pressed={!!m.pinned_at}
+                            onClick={() => togglePin(m)}
+                            className="w-6 h-6 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <span aria-hidden="true" className="material-symbols-outlined text-[14px] leading-none">{m.pinned_at ? "keep_off" : "push_pin"}</span>
                           </button>
                         </div>
                         {pickerFor === m.id && (
-                          <div className={`absolute -top-10 ${mine ? "left-0" : "right-0"} bg-white border border-slate-200 rounded-full shadow px-2 py-1 flex gap-1 z-10`}>
+                          <div
+                            role="menu"
+                            aria-label="Quick reactions"
+                            onKeyDown={(e) => { if (e.key === "Escape") setPickerFor(null); }}
+                            className={`absolute -top-10 ${mine ? "left-0" : "right-0"} bg-white border border-slate-200 rounded-full shadow px-2 py-1 flex gap-1 z-10`}
+                          >
                             {QUICK_EMOJI.map((e) => (
-                              <button key={e} onClick={() => toggleReaction(m.id, e)} className="hover:scale-125 transition text-lg leading-none">{e}</button>
+                              <button
+                                key={e}
+                                type="button"
+                                role="menuitem"
+                                aria-label={`React with ${e}`}
+                                onClick={() => toggleReaction(m.id, e)}
+                                className="hover:scale-125 transition text-lg leading-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full"
+                              >
+                                <span aria-hidden="true">{e}</span>
+                              </button>
                             ))}
                           </div>
                         )}
+
                       </div>
                     </div>
                   );
@@ -486,34 +604,87 @@ function ChatPage() {
               </div>
 
               {replyTo && (
-                <div className="border-t border-slate-100 px-4 py-2 bg-slate-50 flex items-center gap-2 text-xs">
-                  <span className="material-symbols-outlined text-slate-500 text-[16px]">reply</span>
-                  <div className="flex-1 truncate text-slate-600">Replying to: {replyTo.body.slice(0, 100)}</div>
-                  <button onClick={() => setReplyTo(null)} className="text-slate-500 hover:text-slate-800">
-                    <span className="material-symbols-outlined text-[18px]">close</span>
+                <div role="status" aria-live="polite" className="border-t border-slate-100 px-4 py-2 bg-slate-50 flex items-center gap-2 text-xs">
+                  <span aria-hidden="true" className="material-symbols-outlined text-slate-500 text-[16px]">reply</span>
+                  <div className="flex-1 truncate text-slate-600">Replying to: {replyTo.body?.slice(0, 100) || "attachment"}</div>
+                  <button
+                    type="button"
+                    aria-label="Cancel reply"
+                    onClick={() => setReplyTo(null)}
+                    className="text-slate-500 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                  >
+                    <span aria-hidden="true" className="material-symbols-outlined text-[18px]">close</span>
                   </button>
                 </div>
               )}
 
+              {pendingFiles.length > 0 && (
+                <ul aria-label="Files ready to send" className="border-t border-slate-100 px-4 py-2 bg-slate-50 flex flex-wrap gap-2">
+                  {pendingFiles.map((f) => (
+                    <li key={f.path} className="flex items-center gap-2 text-xs bg-white border border-slate-200 rounded-full pl-3 pr-1 py-1">
+                      <span aria-hidden="true" className="material-symbols-outlined text-[14px] text-slate-500">description</span>
+                      <span className="max-w-[180px] truncate">{f.name}</span>
+                      <span className="text-slate-400">{Math.ceil(f.size / 1024)} KB</span>
+                      <button
+                        type="button"
+                        aria-label={`Remove ${f.name}`}
+                        onClick={() => removePending(f)}
+                        className="w-5 h-5 rounded-full hover:bg-slate-100 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <span aria-hidden="true" className="material-symbols-outlined text-[14px]">close</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
               <div className="border-t border-slate-100 p-3 relative">
                 {mentionSuggestions.length > 0 && (
-                  <div className="absolute bottom-full left-3 mb-1 bg-white border border-slate-200 rounded-lg shadow-lg w-64 z-20 overflow-hidden">
+                  <ul
+                    role="listbox"
+                    aria-label="Mention suggestions"
+                    className="absolute bottom-full left-3 mb-1 bg-white border border-slate-200 rounded-lg shadow-lg w-64 z-20 overflow-hidden"
+                  >
                     {mentionSuggestions.map((s) => (
-                      <button
-                        key={s.user_id}
-                        onClick={() => insertMention(s.full_name!)}
-                        className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm flex items-center gap-2"
-                      >
-                        <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-[10px] font-semibold flex items-center justify-center">
-                          {(s.full_name ?? "?")[0]?.toUpperCase()}
-                        </div>
-                        {s.full_name}
-                      </button>
+                      <li key={s.user_id} role="option" aria-selected="false">
+                        <button
+                          type="button"
+                          onClick={() => insertMention(s.full_name!)}
+                          className="w-full text-left px-3 py-2 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none text-sm flex items-center gap-2"
+                        >
+                          <div aria-hidden="true" className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-[10px] font-semibold flex items-center justify-center">
+                            {(s.full_name ?? "?")[0]?.toUpperCase()}
+                          </div>
+                          {s.full_name}
+                        </button>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => uploadFiles(e.target.files)}
+                  aria-hidden="true"
+                  tabIndex={-1}
+                />
                 <div className="flex gap-2 items-end">
+                  <button
+                    type="button"
+                    aria-label="Attach files"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="w-10 h-10 rounded-full border border-slate-200 hover:bg-slate-50 flex items-center justify-center shrink-0 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <span aria-hidden="true" className="material-symbols-outlined text-[20px] text-slate-600">
+                      {uploading ? "progress_activity" : "attach_file"}
+                    </span>
+                  </button>
+                  <label htmlFor="chat-composer-input" className="sr-only">Message</label>
                   <textarea
+                    id="chat-composer-input"
                     ref={inputRef}
                     value={text}
                     onChange={(e) => onInputChange(e.target.value)}
@@ -525,13 +696,21 @@ function ChatPage() {
                     }}
                     rows={1}
                     placeholder={`Message ${nameFor(active)} — use @ to mention`}
+                    aria-label={`Message ${nameFor(active)}`}
                     className="flex-1 border border-slate-200 rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none max-h-32"
                   />
-                  <button onClick={send} className="bg-blue-500 hover:bg-blue-400 text-white rounded-full w-10 h-10 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[20px]">send</span>
+                  <button
+                    type="button"
+                    onClick={send}
+                    aria-label="Send message"
+                    disabled={!text.trim() && pendingFiles.length === 0}
+                    className="bg-blue-500 hover:bg-blue-400 disabled:bg-slate-300 text-white rounded-full w-10 h-10 flex items-center justify-center shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <span aria-hidden="true" className="material-symbols-outlined text-[20px]">send</span>
                   </button>
                 </div>
               </div>
+
             </>
           )}
         </div>
