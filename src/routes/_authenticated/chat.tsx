@@ -604,34 +604,87 @@ function ChatPage() {
               </div>
 
               {replyTo && (
-                <div className="border-t border-slate-100 px-4 py-2 bg-slate-50 flex items-center gap-2 text-xs">
-                  <span className="material-symbols-outlined text-slate-500 text-[16px]">reply</span>
-                  <div className="flex-1 truncate text-slate-600">Replying to: {replyTo.body.slice(0, 100)}</div>
-                  <button onClick={() => setReplyTo(null)} className="text-slate-500 hover:text-slate-800">
-                    <span className="material-symbols-outlined text-[18px]">close</span>
+                <div role="status" aria-live="polite" className="border-t border-slate-100 px-4 py-2 bg-slate-50 flex items-center gap-2 text-xs">
+                  <span aria-hidden="true" className="material-symbols-outlined text-slate-500 text-[16px]">reply</span>
+                  <div className="flex-1 truncate text-slate-600">Replying to: {replyTo.body?.slice(0, 100) || "attachment"}</div>
+                  <button
+                    type="button"
+                    aria-label="Cancel reply"
+                    onClick={() => setReplyTo(null)}
+                    className="text-slate-500 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                  >
+                    <span aria-hidden="true" className="material-symbols-outlined text-[18px]">close</span>
                   </button>
                 </div>
               )}
 
+              {pendingFiles.length > 0 && (
+                <ul aria-label="Files ready to send" className="border-t border-slate-100 px-4 py-2 bg-slate-50 flex flex-wrap gap-2">
+                  {pendingFiles.map((f) => (
+                    <li key={f.path} className="flex items-center gap-2 text-xs bg-white border border-slate-200 rounded-full pl-3 pr-1 py-1">
+                      <span aria-hidden="true" className="material-symbols-outlined text-[14px] text-slate-500">description</span>
+                      <span className="max-w-[180px] truncate">{f.name}</span>
+                      <span className="text-slate-400">{Math.ceil(f.size / 1024)} KB</span>
+                      <button
+                        type="button"
+                        aria-label={`Remove ${f.name}`}
+                        onClick={() => removePending(f)}
+                        className="w-5 h-5 rounded-full hover:bg-slate-100 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <span aria-hidden="true" className="material-symbols-outlined text-[14px]">close</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
               <div className="border-t border-slate-100 p-3 relative">
                 {mentionSuggestions.length > 0 && (
-                  <div className="absolute bottom-full left-3 mb-1 bg-white border border-slate-200 rounded-lg shadow-lg w-64 z-20 overflow-hidden">
+                  <ul
+                    role="listbox"
+                    aria-label="Mention suggestions"
+                    className="absolute bottom-full left-3 mb-1 bg-white border border-slate-200 rounded-lg shadow-lg w-64 z-20 overflow-hidden"
+                  >
                     {mentionSuggestions.map((s) => (
-                      <button
-                        key={s.user_id}
-                        onClick={() => insertMention(s.full_name!)}
-                        className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm flex items-center gap-2"
-                      >
-                        <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-[10px] font-semibold flex items-center justify-center">
-                          {(s.full_name ?? "?")[0]?.toUpperCase()}
-                        </div>
-                        {s.full_name}
-                      </button>
+                      <li key={s.user_id} role="option" aria-selected="false">
+                        <button
+                          type="button"
+                          onClick={() => insertMention(s.full_name!)}
+                          className="w-full text-left px-3 py-2 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none text-sm flex items-center gap-2"
+                        >
+                          <div aria-hidden="true" className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-[10px] font-semibold flex items-center justify-center">
+                            {(s.full_name ?? "?")[0]?.toUpperCase()}
+                          </div>
+                          {s.full_name}
+                        </button>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => uploadFiles(e.target.files)}
+                  aria-hidden="true"
+                  tabIndex={-1}
+                />
                 <div className="flex gap-2 items-end">
+                  <button
+                    type="button"
+                    aria-label="Attach files"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="w-10 h-10 rounded-full border border-slate-200 hover:bg-slate-50 flex items-center justify-center shrink-0 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <span aria-hidden="true" className="material-symbols-outlined text-[20px] text-slate-600">
+                      {uploading ? "progress_activity" : "attach_file"}
+                    </span>
+                  </button>
+                  <label htmlFor="chat-composer-input" className="sr-only">Message</label>
                   <textarea
+                    id="chat-composer-input"
                     ref={inputRef}
                     value={text}
                     onChange={(e) => onInputChange(e.target.value)}
@@ -643,13 +696,21 @@ function ChatPage() {
                     }}
                     rows={1}
                     placeholder={`Message ${nameFor(active)} — use @ to mention`}
+                    aria-label={`Message ${nameFor(active)}`}
                     className="flex-1 border border-slate-200 rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none max-h-32"
                   />
-                  <button onClick={send} className="bg-blue-500 hover:bg-blue-400 text-white rounded-full w-10 h-10 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[20px]">send</span>
+                  <button
+                    type="button"
+                    onClick={send}
+                    aria-label="Send message"
+                    disabled={!text.trim() && pendingFiles.length === 0}
+                    className="bg-blue-500 hover:bg-blue-400 disabled:bg-slate-300 text-white rounded-full w-10 h-10 flex items-center justify-center shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <span aria-hidden="true" className="material-symbols-outlined text-[20px]">send</span>
                   </button>
                 </div>
               </div>
+
             </>
           )}
         </div>
