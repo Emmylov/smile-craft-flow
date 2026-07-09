@@ -481,15 +481,38 @@ function ChatPage() {
                               ↳ {replied.body.slice(0, 80)}
                             </div>
                           )}
-                          <div className="whitespace-pre-wrap">
-                            {m.body.split(/(@[\w\-]+(?:\s[\w\-]+)?)/g).map((chunk, i) =>
-                              chunk.startsWith("@") ? (
-                                <span key={i} className={mine ? "font-semibold underline" : "font-semibold text-blue-600"}>{chunk}</span>
-                              ) : (
-                                <span key={i}>{chunk}</span>
-                              ),
-                            )}
-                          </div>
+                          {m.body && (
+                            <div className="whitespace-pre-wrap">
+                              {m.body.split(/(@[\w\-]+(?:\s[\w\-]+)?)/g).map((chunk, i) =>
+                                chunk.startsWith("@") ? (
+                                  <span key={i} className={mine ? "font-semibold underline" : "font-semibold text-blue-600"}>{chunk}</span>
+                                ) : (
+                                  <span key={i}>{chunk}</span>
+                                ),
+                              )}
+                            </div>
+                          )}
+                          {m.attachments && m.attachments.length > 0 && (
+                            <ul className={`mt-1 space-y-1 ${m.body ? "" : ""}`} aria-label="Attachments">
+                              {m.attachments.map((a) => (
+                                <li key={a.path}>
+                                  <button
+                                    type="button"
+                                    onClick={() => openAttachment(a)}
+                                    aria-label={`Open attachment ${a.name}, ${Math.ceil(a.size / 1024)} kilobytes`}
+                                    className={`w-full flex items-center gap-2 text-left text-xs px-2 py-1.5 rounded-lg border ${mine ? "bg-blue-400/40 border-blue-300 text-white hover:bg-blue-400/60" : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"}`}
+                                  >
+                                    <span aria-hidden="true" className="material-symbols-outlined text-[16px]">
+                                      {a.type.startsWith("image/") ? "image" : a.type.startsWith("video/") ? "movie" : "description"}
+                                    </span>
+                                    <span className="truncate flex-1">{a.name}</span>
+                                    <span className={mine ? "text-blue-50" : "text-slate-400"}>{Math.ceil(a.size / 1024)} KB</span>
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+
                           <div className={`text-[10px] mt-0.5 ${mine ? "text-blue-100" : "text-slate-400"}`}>
                             {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                             {m.edited_at && " · edited"}
