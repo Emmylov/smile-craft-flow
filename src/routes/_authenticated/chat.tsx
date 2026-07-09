@@ -520,37 +520,80 @@ function ChatPage() {
                           </div>
                         </div>
                         {rxGrouped.length > 0 && (
-                          <div className={`flex gap-1 mt-1 ${mine ? "justify-end" : "justify-start"}`}>
+                          <ul role="list" aria-label="Reactions" className={`flex gap-1 mt-1 ${mine ? "justify-end" : "justify-start"}`}>
                             {rxGrouped.map(([emo, count]) => {
                               const iReacted = msgRx.some((r) => r.emoji === emo && r.user_id === userId);
                               return (
-                                <button
-                                  key={emo}
-                                  onClick={() => toggleReaction(m.id, emo)}
-                                  className={`text-[11px] px-1.5 py-0.5 rounded-full border ${iReacted ? "bg-blue-100 border-blue-300" : "bg-white border-slate-200"}`}
-                                >
-                                  {emo} {count}
-                                </button>
+                                <li key={emo}>
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleReaction(m.id, emo)}
+                                    aria-label={`${emo} reaction, ${count}, ${iReacted ? "remove yours" : "add yours"}`}
+                                    aria-pressed={iReacted}
+                                    className={`text-[11px] px-1.5 py-0.5 rounded-full border focus:outline-none focus:ring-2 focus:ring-blue-500 ${iReacted ? "bg-blue-100 border-blue-300" : "bg-white border-slate-200"}`}
+                                  >
+                                    <span aria-hidden="true">{emo} {count}</span>
+                                  </button>
+                                </li>
                               );
                             })}
-                          </div>
+                          </ul>
                         )}
-                        <div className={`absolute -top-3 ${mine ? "left-0" : "right-0"} opacity-0 group-hover:opacity-100 transition flex items-center gap-0.5 bg-white border border-slate-200 rounded-full shadow px-1 py-0.5`}>
-                          <button title="React" onClick={() => setPickerFor(pickerFor === m.id ? null : m.id)} className="w-6 h-6 rounded-full hover:bg-slate-100 text-[14px]">😊</button>
-                          <button title="Reply" onClick={() => { setReplyTo(m); inputRef.current?.focus(); }} className="w-6 h-6 rounded-full hover:bg-slate-100">
-                            <span className="material-symbols-outlined text-[14px] leading-none">reply</span>
+                        <div
+                          role="toolbar"
+                          aria-label={`Actions for message from ${active.participants.find((p) => p.user_id === m.sender_id)?.full_name ?? "you"}`}
+                          className={`absolute -top-3 ${mine ? "left-0" : "right-0"} opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition flex items-center gap-0.5 bg-white border border-slate-200 rounded-full shadow px-1 py-0.5`}
+                        >
+                          <button
+                            type="button"
+                            aria-label="Add reaction"
+                            aria-haspopup="menu"
+                            aria-expanded={pickerFor === m.id}
+                            onClick={() => setPickerFor(pickerFor === m.id ? null : m.id)}
+                            className="w-6 h-6 rounded-full hover:bg-slate-100 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <span aria-hidden="true">😊</span>
                           </button>
-                          <button title={m.pinned_at ? "Unpin" : "Pin"} onClick={() => togglePin(m)} className="w-6 h-6 rounded-full hover:bg-slate-100">
-                            <span className="material-symbols-outlined text-[14px] leading-none">{m.pinned_at ? "keep_off" : "push_pin"}</span>
+                          <button
+                            type="button"
+                            aria-label="Reply to this message"
+                            onClick={() => { setReplyTo(m); inputRef.current?.focus(); }}
+                            className="w-6 h-6 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <span aria-hidden="true" className="material-symbols-outlined text-[14px] leading-none">reply</span>
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={m.pinned_at ? "Unpin message" : "Pin message"}
+                            aria-pressed={!!m.pinned_at}
+                            onClick={() => togglePin(m)}
+                            className="w-6 h-6 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <span aria-hidden="true" className="material-symbols-outlined text-[14px] leading-none">{m.pinned_at ? "keep_off" : "push_pin"}</span>
                           </button>
                         </div>
                         {pickerFor === m.id && (
-                          <div className={`absolute -top-10 ${mine ? "left-0" : "right-0"} bg-white border border-slate-200 rounded-full shadow px-2 py-1 flex gap-1 z-10`}>
+                          <div
+                            role="menu"
+                            aria-label="Quick reactions"
+                            onKeyDown={(e) => { if (e.key === "Escape") setPickerFor(null); }}
+                            className={`absolute -top-10 ${mine ? "left-0" : "right-0"} bg-white border border-slate-200 rounded-full shadow px-2 py-1 flex gap-1 z-10`}
+                          >
                             {QUICK_EMOJI.map((e) => (
-                              <button key={e} onClick={() => toggleReaction(m.id, e)} className="hover:scale-125 transition text-lg leading-none">{e}</button>
+                              <button
+                                key={e}
+                                type="button"
+                                role="menuitem"
+                                aria-label={`React with ${e}`}
+                                onClick={() => toggleReaction(m.id, e)}
+                                className="hover:scale-125 transition text-lg leading-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full"
+                              >
+                                <span aria-hidden="true">{e}</span>
+                              </button>
                             ))}
                           </div>
                         )}
+
                       </div>
                     </div>
                   );
