@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function DashboardPage() {
-  const { hospital, profile, role } = useKairos();
+  const { hospital, profile, role, refresh } = useKairos();
   const [stats, setStats] = useState({
     patients: 0,
     queueWaiting: 0,
@@ -32,6 +32,7 @@ function DashboardPage() {
   const [clinicians, setClinicians] = useState<any[]>([]);
   const [recentQueue, setRecentQueue] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (!hospital?.id) return;
@@ -124,10 +125,34 @@ function DashboardPage() {
     };
   }, [hospital?.id]);
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
+
   if (!hospital) {
     return (
       <div className="text-center py-16">
-        <p className="text-slate-500">No hospital workspace linked to your account.</p>
+        <div className="space-y-4">
+          <p className="text-slate-600 font-medium">No hospital workspace linked to your account.</p>
+          <p className="text-slate-500 text-sm">You need to be assigned to a hospital workspace to access the dashboard. Contact your hospital admin.</p>
+          <div className="flex gap-2 justify-center pt-4">
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50"
+            >
+              {isRefreshing ? "Refreshing…" : "Try refreshing"}
+            </button>
+            <Link
+              to="/onboarding"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500"
+            >
+              Create workspace
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
