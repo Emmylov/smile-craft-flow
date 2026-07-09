@@ -200,9 +200,49 @@ function ChatPage() {
     }, 5000);
   };
 
+  const uploadFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !hospital?.id || !userId) return;
+    setUploading(true);
+    const uploaded: Attachment[] = [];
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > 20 * 1024 * 1024) {
+          toast.error(`${file.name} exceeds 20 MB`);
+          continue;
+        }
+        const safe = file.name.replace(/[^\w.\-]+/g, "_");
+        const path = `${hospital.id}/${activeId ?? "misc"}/${userId}/${Date.now()}-${safe}`;
+        const { error } = await supabase.storage.from("chat-attachments").upload(path, file, {
+          contentType: file.type || "application/octet-stream",
+          upsert: false,
+        });
+        if (error) {
+          toast.error(error.message);
+          continue;
+        }
+        uploaded.push({ path, name: file.name, size: file.size, type: file.type || "application/octet-stream" });
+      }
+      if (uploaded.length) setPendingFiles((p) => [...p, ...uploaded]);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const removePending = async (att: Attachment) => {
+    await supabase.storage.from("chat-attachments").remove([att.path]);
+    setPendingFiles((p) => p.filter((f) => f.path !== att.path));
+  };
+
+  const openAttachment = async (att: Attachment) => {
+    const { data, error } = await supabase.storage.from("chat-attachments").createSignedUrl(att.path, 60 * 10);
+    if (error || !data?.signedUrl) return toast.error(error?.message ?? "Could not open file");
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  };
+
   const send = async () => {
-    if (!text.trim() || !activeId || !hospital?.id || !userId || !active) return;
     const body = text.trim();
+    if ((!body && pendingFiles.length === 0) || !activeId || !hospital?.id || !userId || !active) return;
     // Parse @mentions against active participants
     const nameToId = new Map<string, string>();
     active.participants.forEach((p) => p.full_name && nameToId.set(p.full_name.toLowerCase(), p.user_id));
@@ -212,18 +252,21 @@ function ChatPage() {
       if (re.test(body) && id !== userId) mentioned.add(id);
     }
 
+    const attachmentsToSend = pendingFiles;
     setText("");
     setReplyTo(null);
     setMentionQuery(null);
+    setPendingFiles([]);
     const { data: inserted, error } = await supabase
       .from("chat_messages")
       .insert({
         conversation_id: activeId,
         sender_id: userId,
         hospital_id: hospital.id,
-        body,
+        body: body || null,
         reply_to_id: replyTo?.id ?? null,
         mentions: Array.from(mentioned),
+        attachments: attachmentsToSend,
       })
       .select()
       .single();
@@ -235,7 +278,7 @@ function ChatPage() {
         hospital_id: hospital.id,
         user_id: uid,
         type: "mention",
-        message: `${senderName} mentioned you: ${body.slice(0, 120)}`,
+        message: `${senderName} mentioned you: ${(body || "shared a file").slice(0, 120)}`,
         link: "/chat",
         conversation_id: activeId,
         read: false,
@@ -243,6 +286,7 @@ function ChatPage() {
       await supabase.from("notifications").insert(rows);
     }
   };
+
 
   const toggleReaction = async (messageId: string, emoji: string) => {
     if (!userId || !activeId) return;
