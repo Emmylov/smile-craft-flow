@@ -27,11 +27,15 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedAuraRouteImport } from './routes/_authenticated/aura'
 import { Route as AuthenticatedAppointmentsRouteImport } from './routes/_authenticated/appointments'
+import { Route as ApiTerminologySearchRouteImport } from './routes/api/terminology/search'
+import { Route as ApiFhirBundleRouteImport } from './routes/api/fhir/bundle'
 import { Route as ApiAuraDictateRouteImport } from './routes/api/aura/dictate'
 import { Route as ApiAuraChatRouteImport } from './routes/api/aura/chat'
 import { Route as AuthenticatedPatientsIdRouteImport } from './routes/_authenticated/patients.$id'
 import { Route as AuthenticatedConsultationIdRouteImport } from './routes/_authenticated/consultation.$id'
 import { Route as AuthenticatedAuraThreadIdRouteImport } from './routes/_authenticated/aura.$threadId'
+import { Route as ApiFhirPatientIdRouteImport } from './routes/api/fhir/patient.$id'
+import { Route as ApiFhirEncounterIdRouteImport } from './routes/api/fhir/encounter.$id'
 
 const ProductRoute = ProductRouteImport.update({
   id: '/product',
@@ -124,6 +128,16 @@ const AuthenticatedAppointmentsRoute =
     path: '/appointments',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiTerminologySearchRoute = ApiTerminologySearchRouteImport.update({
+  id: '/api/terminology/search',
+  path: '/api/terminology/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFhirBundleRoute = ApiFhirBundleRouteImport.update({
+  id: '/api/fhir/bundle',
+  path: '/api/fhir/bundle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuraDictateRoute = ApiAuraDictateRouteImport.update({
   id: '/api/aura/dictate',
   path: '/api/aura/dictate',
@@ -151,6 +165,16 @@ const AuthenticatedAuraThreadIdRoute =
     path: '/$threadId',
     getParentRoute: () => AuthenticatedAuraRoute,
   } as any)
+const ApiFhirPatientIdRoute = ApiFhirPatientIdRouteImport.update({
+  id: '/api/fhir/patient/$id',
+  path: '/api/fhir/patient/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFhirEncounterIdRoute = ApiFhirEncounterIdRouteImport.update({
+  id: '/api/fhir/encounter/$id',
+  path: '/api/fhir/encounter/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -175,6 +199,10 @@ export interface FileRoutesByFullPath {
   '/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/api/aura/chat': typeof ApiAuraChatRoute
   '/api/aura/dictate': typeof ApiAuraDictateRoute
+  '/api/fhir/bundle': typeof ApiFhirBundleRoute
+  '/api/terminology/search': typeof ApiTerminologySearchRoute
+  '/api/fhir/encounter/$id': typeof ApiFhirEncounterIdRoute
+  '/api/fhir/patient/$id': typeof ApiFhirPatientIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -199,6 +227,10 @@ export interface FileRoutesByTo {
   '/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/api/aura/chat': typeof ApiAuraChatRoute
   '/api/aura/dictate': typeof ApiAuraDictateRoute
+  '/api/fhir/bundle': typeof ApiFhirBundleRoute
+  '/api/terminology/search': typeof ApiTerminologySearchRoute
+  '/api/fhir/encounter/$id': typeof ApiFhirEncounterIdRoute
+  '/api/fhir/patient/$id': typeof ApiFhirPatientIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -225,6 +257,10 @@ export interface FileRoutesById {
   '/_authenticated/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/api/aura/chat': typeof ApiAuraChatRoute
   '/api/aura/dictate': typeof ApiAuraDictateRoute
+  '/api/fhir/bundle': typeof ApiFhirBundleRoute
+  '/api/terminology/search': typeof ApiTerminologySearchRoute
+  '/api/fhir/encounter/$id': typeof ApiFhirEncounterIdRoute
+  '/api/fhir/patient/$id': typeof ApiFhirPatientIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -251,6 +287,10 @@ export interface FileRouteTypes {
     | '/patients/$id'
     | '/api/aura/chat'
     | '/api/aura/dictate'
+    | '/api/fhir/bundle'
+    | '/api/terminology/search'
+    | '/api/fhir/encounter/$id'
+    | '/api/fhir/patient/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -275,6 +315,10 @@ export interface FileRouteTypes {
     | '/patients/$id'
     | '/api/aura/chat'
     | '/api/aura/dictate'
+    | '/api/fhir/bundle'
+    | '/api/terminology/search'
+    | '/api/fhir/encounter/$id'
+    | '/api/fhir/patient/$id'
   id:
     | '__root__'
     | '/'
@@ -300,6 +344,10 @@ export interface FileRouteTypes {
     | '/_authenticated/patients/$id'
     | '/api/aura/chat'
     | '/api/aura/dictate'
+    | '/api/fhir/bundle'
+    | '/api/terminology/search'
+    | '/api/fhir/encounter/$id'
+    | '/api/fhir/patient/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -312,6 +360,10 @@ export interface RootRouteChildren {
   InviteTokenRoute: typeof InviteTokenRoute
   ApiAuraChatRoute: typeof ApiAuraChatRoute
   ApiAuraDictateRoute: typeof ApiAuraDictateRoute
+  ApiFhirBundleRoute: typeof ApiFhirBundleRoute
+  ApiTerminologySearchRoute: typeof ApiTerminologySearchRoute
+  ApiFhirEncounterIdRoute: typeof ApiFhirEncounterIdRoute
+  ApiFhirPatientIdRoute: typeof ApiFhirPatientIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -442,6 +494,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppointmentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/terminology/search': {
+      id: '/api/terminology/search'
+      path: '/api/terminology/search'
+      fullPath: '/api/terminology/search'
+      preLoaderRoute: typeof ApiTerminologySearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/fhir/bundle': {
+      id: '/api/fhir/bundle'
+      path: '/api/fhir/bundle'
+      fullPath: '/api/fhir/bundle'
+      preLoaderRoute: typeof ApiFhirBundleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/aura/dictate': {
       id: '/api/aura/dictate'
       path: '/api/aura/dictate'
@@ -476,6 +542,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/aura/$threadId'
       preLoaderRoute: typeof AuthenticatedAuraThreadIdRouteImport
       parentRoute: typeof AuthenticatedAuraRoute
+    }
+    '/api/fhir/patient/$id': {
+      id: '/api/fhir/patient/$id'
+      path: '/api/fhir/patient/$id'
+      fullPath: '/api/fhir/patient/$id'
+      preLoaderRoute: typeof ApiFhirPatientIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/fhir/encounter/$id': {
+      id: '/api/fhir/encounter/$id'
+      path: '/api/fhir/encounter/$id'
+      fullPath: '/api/fhir/encounter/$id'
+      preLoaderRoute: typeof ApiFhirEncounterIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -547,6 +627,10 @@ const rootRouteChildren: RootRouteChildren = {
   InviteTokenRoute: InviteTokenRoute,
   ApiAuraChatRoute: ApiAuraChatRoute,
   ApiAuraDictateRoute: ApiAuraDictateRoute,
+  ApiFhirBundleRoute: ApiFhirBundleRoute,
+  ApiTerminologySearchRoute: ApiTerminologySearchRoute,
+  ApiFhirEncounterIdRoute: ApiFhirEncounterIdRoute,
+  ApiFhirPatientIdRoute: ApiFhirPatientIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

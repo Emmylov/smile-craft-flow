@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { acceptStaffInvitation } from "@/lib/kairos.functions";
 import { toast } from "sonner";
-import kairosLogo from "@/assets/kairos-logo.png.asset.json";
+import kairosLogo from "@/assets/kairos-logo.png";
 
 export const Route = createFileRoute("/invite/$token")({
   ssr: false,

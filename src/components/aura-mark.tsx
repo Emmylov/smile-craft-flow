@@ -1,4 +1,4 @@
-import kairosLogo from "@/assets/kairos-logo.png.asset.json";
+import kairosLogo from "@/assets/kairos-logo.png";
 
 export function AuraMark({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   const dimensions = size === "lg" ? "w-28 h-28" : size === "sm" ? "w-10 h-10" : "w-16 h-16";

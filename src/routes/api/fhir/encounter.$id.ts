@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { mapConsultationToEncounter } from "@/lib/fhir";
 
-export const Route = createFileRoute("/api/fhir/Encounter/:id")({
+export const Route = createFileRoute("/api/fhir/encounter/$id")({
   server: {
     handlers: {
       GET: async ({ request }) => {

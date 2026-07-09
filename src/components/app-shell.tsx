@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useKairos, type AppRole } from "@/hooks/use-kairos";
 import { useInvitationNotifications } from "@/hooks/use-invitation-notifications";
 import { useMentionNotifications } from "@/hooks/use-mention-notifications";
-import kairosLogo from "@/assets/kairos-logo.png.asset.json";
+import kairosLogo from "@/assets/kairos-logo.png";
 
 const Icon = ({ name, className = "" }: { name: string; className?: string }) => (
   <span className={`material-symbols-outlined ${className}`}>{name}</span>
