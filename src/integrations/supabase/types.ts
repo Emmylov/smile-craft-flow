@@ -464,6 +464,9 @@ export type Database = {
           complaint: string | null
           created_at: string
           diagnosis: string | null
+          diagnosis_code: string | null
+          diagnosis_display: string | null
+          diagnosis_system: string | null
           doctor_id: string | null
           hospital_id: string
           id: string
@@ -476,6 +479,9 @@ export type Database = {
           complaint?: string | null
           created_at?: string
           diagnosis?: string | null
+          diagnosis_code?: string | null
+          diagnosis_display?: string | null
+          diagnosis_system?: string | null
           doctor_id?: string | null
           hospital_id: string
           id?: string
@@ -488,6 +494,9 @@ export type Database = {
           complaint?: string | null
           created_at?: string
           diagnosis?: string | null
+          diagnosis_code?: string | null
+          diagnosis_display?: string | null
+          diagnosis_system?: string | null
           doctor_id?: string | null
           hospital_id?: string
           id?: string
@@ -615,11 +624,17 @@ export type Database = {
           id: string
           ordered_by: string | null
           patient_id: string
+          result_code: string | null
+          result_display: string | null
+          result_system: string | null
           result_url: string | null
           results: string | null
           started_at: string | null
           status: string
+          test_code: string | null
+          test_display: string | null
           test_name: string
+          test_system: string | null
           updated_at: string
         }
         Insert: {
@@ -630,11 +645,17 @@ export type Database = {
           id?: string
           ordered_by?: string | null
           patient_id: string
+          result_code?: string | null
+          result_display?: string | null
+          result_system?: string | null
           result_url?: string | null
           results?: string | null
           started_at?: string | null
           status?: string
+          test_code?: string | null
+          test_display?: string | null
           test_name: string
+          test_system?: string | null
           updated_at?: string
         }
         Update: {
@@ -645,11 +666,17 @@ export type Database = {
           id?: string
           ordered_by?: string | null
           patient_id?: string
+          result_code?: string | null
+          result_display?: string | null
+          result_system?: string | null
           result_url?: string | null
           results?: string | null
           started_at?: string | null
           status?: string
+          test_code?: string | null
+          test_display?: string | null
           test_name?: string
+          test_system?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -822,6 +849,9 @@ export type Database = {
           id: string
           instructions: string | null
           medication: string
+          medication_code: string | null
+          medication_display: string | null
+          medication_system: string | null
           patient_id: string
           prescribed_by: string | null
           ready_at: string | null
@@ -837,6 +867,9 @@ export type Database = {
           id?: string
           instructions?: string | null
           medication: string
+          medication_code?: string | null
+          medication_display?: string | null
+          medication_system?: string | null
           patient_id: string
           prescribed_by?: string | null
           ready_at?: string | null
@@ -852,6 +885,9 @@ export type Database = {
           id?: string
           instructions?: string | null
           medication?: string
+          medication_code?: string | null
+          medication_display?: string | null
+          medication_system?: string | null
           patient_id?: string
           prescribed_by?: string | null
           ready_at?: string | null
@@ -1222,6 +1258,30 @@ export type Database = {
           },
         ]
       }
+      terminology_codes: {
+        Row: {
+          code: string
+          created_at: string
+          display: string
+          id: string
+          system: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          display: string
+          id?: string
+          system: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          display?: string
+          id?: string
+          system?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1270,6 +1330,7 @@ export type Database = {
           hospital_id: string
           id: string
           notes: string | null
+          observation_coded: Json
           oxygen_saturation: number | null
           patient_id: string
           recorded_by: string | null
@@ -1286,6 +1347,7 @@ export type Database = {
           hospital_id: string
           id?: string
           notes?: string | null
+          observation_coded?: Json
           oxygen_saturation?: number | null
           patient_id: string
           recorded_by?: string | null
@@ -1302,6 +1364,7 @@ export type Database = {
           hospital_id?: string
           id?: string
           notes?: string | null
+          observation_coded?: Json
           oxygen_saturation?: number | null
           patient_id?: string
           recorded_by?: string | null
