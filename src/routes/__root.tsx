@@ -95,8 +95,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      // favicon or app logo: if you upload your logo to public/logo.png it will be used here
-      { rel: "icon", href: "/logo.png", type: "image/png" },
+      // favicon / app logo links. Upload your logo(s) to the public/ folder:
+      // - public/logo.png (default)
+      // - public/logo@2x.png (2x retina)
+      // - public/favicon.png (favicon)
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/logo.png" },
+      { rel: "shortcut icon", href: "/favicon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" },
@@ -128,10 +133,19 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Simple header showing the app logo at load. */}
+      {/* Header with responsive logo. Upload public/logo.png and optional public/logo@2x.png for retina */}
       <header className="w-full py-6 flex justify-center bg-background">
-        {/* Upload your image to public/logo.png (or change the path below) */}
-        <img src="/logo.png" alt="Kairos logo" style={{ height: 56 }} />
+        <img
+          src="/logo.png"
+          srcSet="/logo@2x.png 2x"
+          alt="Kairos logo"
+          style={{ height: 56 }}
+          onError={(e) => {
+            // Fallback to favicon if logo not present
+            const target = e.currentTarget as HTMLImageElement;
+            if (target.src !== "/favicon.png") target.src = "/favicon.png";
+          }}
+        />
       </header>
 
       <Outlet />
