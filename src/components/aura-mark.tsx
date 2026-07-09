@@ -8,7 +8,7 @@ export function AuraMark({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
       <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-xl" />
       <div className="absolute inset-0 rounded-full border border-cyan-300/30" />
       <div className="absolute inset-2 rounded-full border border-violet-300/30 animate-[spin_8s_linear_infinite]" />
-      <img src={kairosLogo.url} alt="Aura" className={`absolute ${inner} rounded-full object-cover drop-shadow-[0_0_18px_rgba(96,165,250,.75)]`} />
+      <img src={kairosLogo} alt="Aura" className={`absolute ${inner} rounded-full object-cover drop-shadow-[0_0_18px_rgba(96,165,250,.75)]`} />
     </div>
   );
 }

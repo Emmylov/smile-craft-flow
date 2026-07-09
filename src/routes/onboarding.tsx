@@ -112,7 +112,7 @@ function OnboardingPage() {
       <div className="relative z-10 min-h-screen flex flex-col">
         <header className="px-6 md:px-10 py-6 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 opacity-80 hover:opacity-100 transition">
-            <img src={kairosLogo.url} alt="Kairos" className="w-8 h-8 rounded-lg" />
+            <img src={kairosLogo} alt="Kairos" className="w-8 h-8 rounded-lg" />
             <span className="text-sm font-semibold tracking-wide">KAIROS</span>
           </Link>
           {step > 0 && step < 5 && (
@@ -130,7 +130,7 @@ function OnboardingPage() {
             {/* Welcome */}
             {step === 0 && (
               <div className="text-center animate-[fadeUp_.8s_ease-out]">
-                <img src={kairosLogo.url} alt="Kairos" className="w-24 h-24 mx-auto mb-8 rounded-2xl shadow-2xl shadow-blue-500/30 animate-[float_3s_ease-in-out_infinite]" />
+                <img src={kairosLogo} alt="Kairos" className="w-24 h-24 mx-auto mb-8 rounded-2xl shadow-2xl shadow-blue-500/30 animate-[float_3s_ease-in-out_infinite]" />
                 <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4">
                   Welcome to <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">Kairos</span>
                 </h1>
@@ -229,7 +229,7 @@ function OnboardingPage() {
                       <div className="relative w-24 h-24 mx-auto mb-6">
                         <div className="absolute inset-0 rounded-full border-2 border-blue-400/30" />
                         <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-400 animate-spin" />
-                        <img src={kairosLogo.url} alt="" className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full object-cover" />
+                        <img src={kairosLogo} alt="" className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full object-cover" />
                       </div>
                       <div className="space-y-1 text-sm text-slate-300">
                         <LoadingLine text="Provisioning workspace" delay={0} />

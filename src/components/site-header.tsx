@@ -90,7 +90,7 @@ export function SiteHeader({ onRequest }: { onRequest?: () => void }) {
         >
           <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
             <img
-              src={kairosLogo.url}
+              src={kairosLogo}
               alt="Kairos logo"
               width={36}
               height={36}
@@ -202,7 +202,7 @@ export function SiteFooter() {
       <div className="max-w-container-max mx-auto px-margin-desktop grid md:grid-cols-4 gap-8 text-sm">
         <div>
           <div className="flex items-center gap-2.5 mb-3">
-            <img src={kairosLogo.url} alt="Kairos logo" width={32} height={32} className="h-8 w-8 object-contain" />
+            <img src={kairosLogo} alt="Kairos logo" width={32} height={32} className="h-8 w-8 object-contain" />
             <span className="font-display font-extrabold text-lg text-white tracking-tight">Kairos</span>
           </div>
 

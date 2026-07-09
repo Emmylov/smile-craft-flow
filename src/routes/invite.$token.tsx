@@ -99,7 +99,7 @@ function InvitePage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
-          <img src={kairosLogo.url} alt="Kairos" className="w-14 h-14 mx-auto rounded-2xl shadow-lg shadow-blue-500/30" />
+          <img src={kairosLogo} alt="Kairos" className="w-14 h-14 mx-auto rounded-2xl shadow-lg shadow-blue-500/30" />
           <div className="text-xs uppercase tracking-[0.2em] text-blue-300 mt-4">Staff invitation</div>
         </div>
 
