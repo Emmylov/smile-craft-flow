@@ -29,6 +29,8 @@ type Conversation = {
   unread: number;
 };
 
+type Attachment = { path: string; name: string; size: number; type: string };
+
 type Message = {
   id: string;
   conversation_id: string;
@@ -41,7 +43,9 @@ type Message = {
   pinned_by: string | null;
   edited_at: string | null;
   mentions: string[];
+  attachments: Attachment[];
 };
+
 
 type Reaction = { id: string; message_id: string; user_id: string; emoji: string };
 type Staff = { user_id: string; full_name: string };
