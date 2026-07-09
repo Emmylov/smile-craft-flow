@@ -50,7 +50,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="w-64 bg-slate-950 text-slate-100 flex flex-col shrink-0">
         <div className="px-5 py-5 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <img src={kairosLogo.url} alt="Kairos" className="w-9 h-9 rounded-lg object-cover" />
+            <img src={kairosLogo} alt="Kairos" className="w-9 h-9 rounded-lg object-cover" />
             <div>
               <div className="font-bold text-sm">Kairos Core</div>
               <div className="text-[11px] text-slate-400 truncate max-w-[160px]">
