@@ -133,23 +133,9 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Header with responsive logo. Upload public/logo.png and optional public/logo@2x.png for retina */}
-      <header className="w-full py-6 flex justify-center bg-background">
-        <img
-          src="/logo.png"
-          srcSet="/logo@2x.png 2x"
-          alt="Kairos logo"
-          style={{ height: 56 }}
-          onError={(e) => {
-            // Fallback to favicon if logo not present
-            const target = e.currentTarget as HTMLImageElement;
-            if (target.src !== "/favicon.png") target.src = "/favicon.png";
-          }}
-        />
-      </header>
-
       <Outlet />
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
+
   );
 }
