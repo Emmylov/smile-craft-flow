@@ -64,9 +64,13 @@ function ChatPage() {
   const [search, setSearch] = useState("");
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [pickerFor, setPickerFor] = useState<string | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<Attachment[]>([]);
+  const [uploading, setUploading] = useState(false);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   const loadConversations = async () => {
     if (!userId) return;
